@@ -1,0 +1,3140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="EduOS">
+<meta name="theme-color" content="#fdf8f2">
+<meta name="app-version" content="2026-04-19" id="app-version">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Your personal learning companion">
+<title>EduOS</title>
+<link rel="manifest" href="eduos-manifest.json">
+<link rel="apple-touch-icon" href="eduos-icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Architects+Daughter&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg:#fdf8f2; --bg2:#f5efe6; --bg3:#ede4d8;
+  --surface:#ffffff; --border:#e8ddd0; --border2:#d4c8b8;
+  --text:#2d2420; --text2:#6b5c52; --text3:#a8998e;
+  --teal:#2b9e8f; --teal-dim:rgba(43,158,143,0.1); --teal-dim2:rgba(43,158,143,0.06);
+  --coral:#e8634a; --coral-dim:rgba(232,99,74,0.1);
+  --yellow:#f0b429; --yellow-dim:rgba(240,180,41,0.12);
+  --purple:#7c5cbf; --purple-dim:rgba(124,92,191,0.1);
+  --green:#3aaf6e; --green-dim:rgba(58,175,110,0.1);
+  --blue:#3b82c4; --blue-dim:rgba(59,130,196,0.1);
+  --display:'Architects Daughter',cursive; --sans:'Nunito',system-ui,sans-serif;
+  --radius:12px; --radius-sm:8px; --nav-h:68px;
+}
+html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:15px; }
+#app { display:flex; flex-direction:column; height:100%; max-width:480px; margin:0 auto; position:relative; }
+.screen { display:none; flex-direction:column; flex:1; overflow:hidden; }
+.screen.active { display:flex; }
+.scroll-area { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+.scroll-area::-webkit-scrollbar { display:none; }
+
+/* ── Onboarding ── */
+#onboarding { display:none; position:fixed; inset:0; background:var(--bg); z-index:300; flex-direction:column; align-items:center; justify-content:center; padding:32px 24px; max-width:480px; margin:0 auto; }
+#onboarding.show { display:flex; }
+.onboard-emoji { font-size:64px; margin-bottom:16px; animation:bounce 1s ease infinite alternate; }
+@keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-8px)} }
+.onboard-question { font-family:var(--display); font-size:26px; color:var(--text); text-align:center; margin-bottom:8px; line-height:1.3; }
+.onboard-sub { font-size:13px; color:var(--text3); text-align:center; margin-bottom:32px; }
+.onboard-input { width:100%; background:var(--surface); border:2px solid var(--border); color:var(--text); font-family:var(--sans); font-size:18px; font-weight:600; padding:14px 18px; outline:none; border-radius:var(--radius); text-align:center; transition:border-color .2s; margin-bottom:16px; }
+.onboard-input:focus { border-color:var(--teal); }
+.onboard-input::placeholder { color:var(--text3); font-weight:400; }
+.onboard-options { display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:24px; }
+.onboard-option { padding:10px 18px; border:2px solid var(--border); background:var(--surface); color:var(--text2); border-radius:24px; font-family:var(--sans); font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; }
+.onboard-option.selected { border-color:var(--teal); background:var(--teal-dim); color:var(--teal); }
+.onboard-option:active { transform:scale(.96); }
+.onboard-next { width:100%; padding:16px; background:var(--teal); color:white; border:none; font-family:var(--sans); font-size:16px; font-weight:700; border-radius:var(--radius); cursor:pointer; transition:all .15s; }
+.onboard-progress { display:flex; gap:6px; margin-bottom:32px; }
+.onboard-dot { width:8px; height:8px; border-radius:50%; background:var(--border2); transition:background .2s; }
+.onboard-dot.done { background:var(--teal); }
+
+/* ── Top Bar ── */
+.topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 20px 12px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); }
+.topbar-left { display:flex; flex-direction:column; }
+.topbar-title { font-family:var(--display); font-size:20px; color:var(--text); line-height:1.2; }
+.topbar-sub { font-size:12px; color:var(--text3); margin-top:1px; }
+.topbar-actions { display:flex; gap:8px; }
+.icon-btn { width:36px; height:36px; display:flex; align-items:center; justify-content:center; background:var(--surface); border:1px solid var(--border); color:var(--text2); cursor:pointer; border-radius:var(--radius-sm); font-size:16px; transition:all .15s; }
+.icon-btn:active { border-color:var(--teal); color:var(--teal); }
+.icon-btn.text { width:auto; padding:0 12px; font-size:13px; font-weight:700; }
+
+/* ── Bottom Nav ── */
+.bottom-nav { height:var(--nav-h); border-top:2px solid var(--border); display:flex; align-items:stretch; background:var(--surface); flex-shrink:0; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; cursor:pointer; border:none; background:none; color:var(--text3); font-family:var(--sans); transition:color .15s; position:relative; }
+.nav-item.active { color:var(--teal); }
+.nav-item:active { opacity:.7; }
+.nav-icon { font-size:20px; line-height:1; }
+.nav-label { font-size:10px; font-weight:700; letter-spacing:.02em; }
+.nav-item.active::after { content:''; position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:28px; height:3px; background:var(--teal); border-radius:3px 3px 0 0; }
+.nav-capture { position:relative; top:-8px; }
+.nav-capture-inner { width:54px; height:54px; background:var(--coral); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; color:white; box-shadow:0 4px 16px rgba(232,99,74,.4); transition:transform .15s,box-shadow .15s; }
+.nav-capture:active .nav-capture-inner { transform:scale(.93); box-shadow:0 2px 8px rgba(232,99,74,.25); }
+
+/* ── Home ── */
+.home-hero { background:linear-gradient(135deg,var(--teal) 0%,#1d8a7c 100%); padding:20px 20px 24px; position:relative; overflow:hidden; }
+.home-hero::before { content:'⭐'; position:absolute; font-size:80px; right:-10px; top:-10px; opacity:.12; }
+.home-hero::after { content:'📚'; position:absolute; font-size:60px; right:20px; bottom:-8px; opacity:.2; }
+.hero-greeting { font-family:var(--display); font-size:24px; color:white; line-height:1.3; margin-bottom:4px; }
+.hero-date { font-size:12px; color:rgba(255,255,255,.7); margin-bottom:16px; }
+.streak-pill { display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.3); color:white; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:700; }
+.section-head { padding:16px 20px 8px; font-size:11px; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; font-weight:700; }
+.subject-chips { display:flex; gap:8px; padding:0 20px 4px; overflow-x:auto; scrollbar-width:none; }
+.subject-chips::-webkit-scrollbar { display:none; }
+.subject-chip { display:flex; align-items:center; gap:6px; padding:8px 14px; background:var(--surface); border:1px solid var(--border); border-radius:20px; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+.subject-chip:active { border-color:var(--teal); color:var(--teal); background:var(--teal-dim); }
+.card-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:8px 20px 16px; }
+.module-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; cursor:pointer; transition:all .15s; position:relative; overflow:hidden; animation:fadeUp .35s ease both; }
+.module-card.wide { grid-column:span 2; }
+.module-card:active { transform:scale(.98); border-color:var(--teal); }
+.card-icon { font-size:28px; margin-bottom:8px; display:block; }
+.card-name { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.card-stat { font-size:12px; color:var(--text3); }
+.card-badge { position:absolute; top:12px; right:12px; font-size:10px; font-weight:700; padding:3px 8px; border-radius:10px; }
+.badge-teal   { background:var(--teal-dim);   color:var(--teal); }
+.badge-coral  { background:var(--coral-dim);  color:var(--coral); }
+.badge-yellow { background:var(--yellow-dim); color:#b8860b; }
+.badge-purple { background:var(--purple-dim); color:var(--purple); }
+.badge-green  { background:var(--green-dim);  color:var(--green); }
+.insight-card { margin:0 20px 20px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+.insight-row { display:flex; gap:12px; align-items:flex-start; padding:14px 16px; border-bottom:1px solid var(--border); }
+.insight-row:last-child { border-bottom:none; }
+.insight-dot { width:8px; height:8px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+.dot-teal{background:var(--teal)} .dot-coral{background:var(--coral)} .dot-yellow{background:var(--yellow)} .dot-purple{background:var(--purple)} .dot-green{background:var(--green)}
+.insight-text { font-size:13px; color:var(--text2); line-height:1.5; }
+.insight-text strong { color:var(--text); font-weight:700; }
+
+/* ── Subjects ── */
+.subject-list { padding:16px 20px; display:flex; flex-direction:column; gap:10px; }
+.subject-row { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; cursor:pointer; transition:all .15s; display:flex; align-items:center; gap:14px; animation:fadeUp .3s ease both; }
+.subject-row:active { border-color:var(--teal); transform:scale(.99); }
+.subject-icon { font-size:28px; flex-shrink:0; }
+.subject-info { flex:1; }
+.subject-name { font-size:15px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.subject-topics { font-size:12px; color:var(--text3); }
+.subject-status { font-size:11px; font-weight:700; padding:4px 10px; border-radius:12px; }
+.status-good{background:var(--green-dim);color:var(--green)} .status-watch{background:var(--yellow-dim);color:#b8860b} .status-help{background:var(--coral-dim);color:var(--coral)} .status-new{background:var(--teal-dim);color:var(--teal)}
+
+/* ── Voice Journal ── */
+.journal-wrap { padding:16px 20px; }
+
+.voice-recorder {
+  background:linear-gradient(135deg,#7c5cbf 0%,#5a3f9e 100%);
+  border-radius:var(--radius);
+  padding:24px 20px;
+  text-align:center;
+  margin-bottom:16px;
+  position:relative;
+  overflow:hidden;
+}
+
+.voice-recorder::after { content:'🎙️'; position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:48px; opacity:.2; }
+
+.recorder-label { font-family:var(--display); font-size:18px; color:white; margin-bottom:6px; }
+.recorder-sub { font-size:12px; color:rgba(255,255,255,.7); margin-bottom:20px; }
+
+.record-btn {
+  width:72px; height:72px;
+  background:rgba(255,255,255,.2);
+  border:3px solid rgba(255,255,255,.5);
+  border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:32px;
+  cursor:pointer;
+  margin:0 auto 12px;
+  transition:all .2s;
+  position:relative;
+  z-index:1;
+}
+
+.record-btn.recording {
+  background:var(--coral);
+  border-color:white;
+  animation:pulse 1s ease infinite;
+}
+
+@keyframes pulse {
+  0%   { box-shadow:0 0 0 0 rgba(232,99,74,.6); }
+  70%  { box-shadow:0 0 0 16px rgba(232,99,74,0); }
+  100% { box-shadow:0 0 0 0 rgba(232,99,74,0); }
+}
+
+.record-timer { font-size:13px; color:rgba(255,255,255,.8); font-weight:700; min-height:20px; }
+
+.lang-pills { display:flex; gap:8px; justify-content:center; margin-top:14px; }
+.lang-pill { padding:5px 14px; border:1px solid rgba(255,255,255,.3); border-radius:20px; font-size:12px; font-weight:700; color:rgba(255,255,255,.7); cursor:pointer; transition:all .15s; }
+.lang-pill.active { background:rgba(255,255,255,.2); border-color:white; color:white; }
+
+.transcript-box {
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:var(--radius);
+  padding:14px;
+  min-height:80px;
+  font-size:14px; color:var(--text2); line-height:1.6;
+  margin-bottom:12px;
+  position:relative;
+  transition:border-color .2s;
+}
+
+.transcript-box.active { border-color:var(--purple); }
+.transcript-placeholder { color:var(--text3); font-style:italic; }
+
+.transcript-edit {
+  width:100%; min-height:80px; background:transparent; border:none; outline:none;
+  font-family:var(--sans); font-size:14px; color:var(--text2); line-height:1.6;
+  resize:none; display:none;
+}
+
+.transcript-actions { display:flex; gap:8px; margin-bottom:16px; }
+
+.btn-analyse {
+  flex:1; padding:13px; background:var(--purple); color:white;
+  border:none; font-family:var(--sans); font-size:14px; font-weight:700;
+  border-radius:var(--radius); cursor:pointer; transition:opacity .15s;
+}
+.btn-analyse:disabled { opacity:.5; cursor:not-allowed; }
+.btn-analyse:active { opacity:.85; }
+
+.btn-clear {
+  padding:13px 16px; background:transparent; border:1px solid var(--border);
+  color:var(--text3); font-family:var(--sans); font-size:14px; font-weight:700;
+  border-radius:var(--radius); cursor:pointer; transition:all .15s;
+}
+.btn-clear:active { border-color:var(--coral); color:var(--coral); }
+
+/* Analysis result card */
+.analysis-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); overflow:hidden; margin-bottom:16px;
+  animation:popIn .3s ease;
+}
+
+@keyframes popIn { from{opacity:0;transform:scale(.97) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+.analysis-head { padding:12px 16px; background:var(--purple-dim); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; }
+.analysis-head-title { font-size:13px; font-weight:700; color:var(--purple); flex:1; }
+.analysis-body { padding:14px 16px; }
+
+.analysis-section { margin-bottom:12px; }
+.analysis-section:last-child { margin-bottom:0; }
+.analysis-label { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+
+.tag-row { display:flex; flex-wrap:wrap; gap:6px; }
+.topic-tag { padding:4px 10px; border-radius:10px; font-size:12px; font-weight:700; }
+.tag-understood { background:var(--green-dim); color:var(--green); }
+.tag-partial    { background:var(--yellow-dim); color:#b8860b; }
+.tag-confused   { background:var(--coral-dim);  color:var(--coral); }
+
+.mood-bar { display:flex; gap:8px; align-items:center; }
+.mood-emoji { font-size:24px; }
+.mood-label { font-size:13px; color:var(--text2); }
+
+.action-item { display:flex; gap:8px; align-items:flex-start; padding:8px 0; border-bottom:1px solid var(--border); }
+.action-item:last-child { border-bottom:none; }
+.action-icon { font-size:16px; flex-shrink:0; margin-top:1px; }
+.action-text { font-size:13px; color:var(--text2); line-height:1.4; }
+.action-text strong { color:var(--text); font-weight:700; }
+
+.save-journal-btn {
+  width:100%; padding:14px; background:var(--teal); color:white;
+  border:none; font-family:var(--sans); font-size:15px; font-weight:700;
+  border-radius:var(--radius); cursor:pointer; transition:opacity .15s; margin-bottom:16px;
+}
+.save-journal-btn:active { opacity:.85; }
+
+/* Past journal entries */
+.journal-entry {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px 16px; margin-bottom:10px;
+  cursor:pointer; transition:border-color .15s;
+}
+.journal-entry:active { border-color:var(--purple); }
+.journal-entry-head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.journal-date { font-size:11px; color:var(--text3); }
+.journal-mood { font-size:18px; }
+.journal-preview { font-size:13px; color:var(--text2); line-height:1.5; }
+.journal-tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+.journal-tag { font-size:10px; padding:2px 8px; border-radius:8px; font-weight:700; background:var(--teal-dim); color:var(--teal); }
+
+/* ── School Files ── */
+.files-wrap { padding:16px 20px; }
+
+.upload-zone {
+  border:2px dashed var(--border2);
+  border-radius:var(--radius);
+  padding:32px 20px;
+  text-align:center;
+  cursor:pointer;
+  transition:all .2s;
+  margin-bottom:16px;
+  background:var(--surface);
+}
+
+.upload-zone:active, .upload-zone.dragover {
+  border-color:var(--teal);
+  background:var(--teal-dim2);
+}
+
+.upload-zone-icon { font-size:40px; margin-bottom:10px; }
+.upload-zone-title { font-family:var(--display); font-size:18px; color:var(--text); margin-bottom:6px; }
+.upload-zone-sub { font-size:13px; color:var(--text3); }
+
+.upload-methods { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+
+.upload-method {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:16px 12px; text-align:center;
+  cursor:pointer; transition:all .15s;
+}
+.upload-method:active { border-color:var(--teal); background:var(--teal-dim2); }
+.upload-method-icon { font-size:28px; margin-bottom:6px; }
+.upload-method-label { font-size:12px; font-weight:700; color:var(--text2); }
+.upload-method-sub { font-size:11px; color:var(--text3); margin-top:2px; }
+
+/* Hidden file inputs */
+#fileInputCamera, #fileInputPDF, #fileInputImage { display:none; }
+
+/* Processing card */
+.processing-card {
+  background:var(--surface); border:2px solid var(--teal);
+  border-radius:var(--radius); padding:20px; text-align:center;
+  margin-bottom:16px; animation:popIn .3s ease;
+}
+.processing-icon { font-size:40px; margin-bottom:10px; animation:spin 2s linear infinite; }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.processing-text { font-size:14px; color:var(--text2); }
+
+/* Extracted file card */
+.file-card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); overflow:hidden; margin-bottom:12px;
+  animation:popIn .3s ease;
+}
+.file-card-head { display:flex; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border); background:var(--bg2); align-items:center; }
+.file-thumb { width:48px; height:48px; border-radius:var(--radius-sm); background:var(--bg3); display:flex; align-items:center; justify-content:center; font-size:24px; flex-shrink:0; }
+.file-info { flex:1; }
+.file-name { font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.file-meta { font-size:11px; color:var(--text3); }
+.file-body { padding:14px 16px; }
+.file-section { margin-bottom:12px; }
+.file-section:last-child { margin-bottom:0; }
+.file-section-label { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:5px; }
+.file-section-text { font-size:13px; color:var(--text2); line-height:1.6; }
+.file-save-btn { width:100%; padding:11px; background:var(--teal); color:white; border:none; font-family:var(--sans); font-size:13px; font-weight:700; border-radius:var(--radius-sm); cursor:pointer; margin-top:12px; transition:opacity .15s; }
+.file-save-btn:active { opacity:.85; }
+
+/* Saved files list */
+.saved-file-row {
+  display:flex; gap:12px; align-items:center;
+  padding:12px 14px; background:var(--surface);
+  border:1px solid var(--border); border-radius:var(--radius-sm);
+  margin-bottom:8px; cursor:pointer; transition:border-color .15s;
+}
+.saved-file-row:active { border-color:var(--teal); }
+.saved-file-icon { font-size:24px; flex-shrink:0; }
+.saved-file-info { flex:1; }
+.saved-file-name { font-size:13px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.saved-file-meta { font-size:11px; color:var(--text3); }
+
+/* ── Curiosity ── */
+.curiosity-wrap { padding:16px 20px; }
+.curiosity-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:12px; overflow:hidden; cursor:pointer; transition:border-color .15s; animation:popIn .3s ease both; }
+.curiosity-item:active { border-color:var(--purple); }
+.curiosity-item.expanded { border-color:var(--purple); }
+.curiosity-head { padding:14px 16px; display:flex; align-items:center; gap:10px; }
+.curiosity-q { font-size:14px; font-weight:700; color:var(--text); flex:1; line-height:1.4; }
+.curiosity-date { font-size:11px; color:var(--text3); flex-shrink:0; }
+.curiosity-body { display:none; padding:0 16px 16px; border-top:1px solid var(--border); }
+.curiosity-item.expanded .curiosity-body { display:block; }
+.curiosity-section { margin-top:12px; }
+.curiosity-section-label { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.08em; margin-bottom:4px; }
+.curiosity-section-text { font-size:13px; color:var(--text2); line-height:1.6; }
+.curiosity-activity { margin-top:10px; padding:10px 14px; background:var(--yellow-dim); border-radius:var(--radius-sm); border-left:3px solid var(--yellow); font-size:13px; color:var(--text2); line-height:1.5; }
+.curiosity-empty { text-align:center; padding:48px 24px; color:var(--text3); }
+.curiosity-empty-icon { font-size:48px; margin-bottom:12px; }
+
+/* ── Explanations ── */
+.explain-wrap { padding:16px 20px; }
+.explain-input-row { display:flex; gap:10px; margin-bottom:16px; }
+.explain-input { flex:1; background:var(--surface); border:2px solid var(--border); color:var(--text); font-family:var(--sans); font-size:14px; padding:12px 16px; outline:none; border-radius:var(--radius); transition:border-color .15s; }
+.explain-input:focus { border-color:var(--teal); }
+.btn-primary { background:var(--teal); color:white; border:none; font-family:var(--sans); font-size:13px; font-weight:700; padding:12px 18px; border-radius:var(--radius); cursor:pointer; white-space:nowrap; transition:opacity .15s; }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; }
+.btn-primary:active { opacity:.85; }
+.explain-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:12px; animation:popIn .3s ease; }
+.explain-card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:10px; background:var(--teal-dim2); }
+.explain-card-type { font-size:10px; font-weight:700; color:var(--teal); letter-spacing:.08em; text-transform:uppercase; padding:3px 8px; background:var(--teal-dim); border-radius:8px; }
+.explain-card-body { padding:14px 16px; font-size:14px; color:var(--text2); line-height:1.7; }
+.explain-save-btn { margin-top:10px; padding:8px 16px; background:var(--yellow-dim); color:#b8860b; border:1px solid rgba(240,180,41,.3); border-radius:20px; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; transition:all .15s; }
+.saved-explanations { margin-top:24px; }
+.saved-label { font-size:11px; font-weight:700; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; }
+.saved-item { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px 14px; margin-bottom:8px; }
+.saved-item-topic { font-size:13px; font-weight:700; color:var(--text); margin-bottom:3px; }
+.saved-item-preview { font-size:12px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* ── Review ── */
+.review-wrap { padding:16px 20px; }
+.review-hero { background:linear-gradient(135deg,var(--coral) 0%,#d4522a 100%); border-radius:var(--radius); padding:20px; margin-bottom:16px; color:white; position:relative; overflow:hidden; }
+.review-hero::after { content:'🏆'; position:absolute; right:16px; top:50%; transform:translateY(-50%); font-size:48px; opacity:.3; }
+.review-hero-title { font-family:var(--display); font-size:18px; margin-bottom:4px; }
+.review-hero-sub { font-size:12px; opacity:.8; }
+.review-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:16px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:12px 8px; text-align:center; }
+.stat-val { font-family:var(--display); font-size:24px; color:var(--text); line-height:1; margin-bottom:4px; }
+.stat-val.teal{color:var(--teal)} .stat-val.coral{color:var(--coral)} .stat-val.purple{color:var(--purple)} .stat-val.green{color:var(--green)}
+.stat-key { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.06em; }
+.review-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin-bottom:12px; }
+.review-card-head { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:center; gap:8px; background:var(--bg2); }
+.review-card-title { font-size:13px; font-weight:700; color:var(--text); flex:1; }
+.review-card-body { padding:14px 16px; }
+.win-item { display:flex; gap:10px; padding:10px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+.win-item:last-child { border-bottom:none; }
+.win-emoji { font-size:20px; flex-shrink:0; }
+.win-text { font-size:13px; color:var(--text2); line-height:1.5; flex:1; }
+.win-text strong { color:var(--text); font-weight:700; }
+.generate-btn { width:100%; padding:14px; background:var(--teal-dim); border:2px dashed var(--teal); color:var(--teal); font-family:var(--sans); font-size:14px; font-weight:700; cursor:pointer; border-radius:var(--radius); transition:all .15s; display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:12px; }
+.generate-btn:active { background:var(--teal); color:white; }
+
+/* ── Settings ── */
+.settings-wrap { padding:16px 20px; }
+.settings-section { margin-bottom:24px; }
+.settings-title { font-size:11px; font-weight:700; color:var(--text3); letter-spacing:.08em; text-transform:uppercase; margin-bottom:10px; }
+.settings-row { display:flex; align-items:center; gap:12px; padding:14px 16px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); margin-bottom:8px; cursor:pointer; transition:border-color .15s; }
+.settings-row:active { border-color:var(--teal); }
+.settings-row-icon { font-size:20px; flex-shrink:0; }
+.settings-row-info { flex:1; }
+.settings-row-label { font-size:14px; font-weight:600; color:var(--text); }
+.settings-row-sub { font-size:12px; color:var(--text3); margin-top:2px; }
+.settings-row-right { font-size:13px; color:var(--text3); }
+.profile-card { background:linear-gradient(135deg,var(--teal) 0%,#1d8a7c 100%); border-radius:var(--radius); padding:20px; margin-bottom:20px; color:white; display:flex; align-items:center; gap:16px; }
+.profile-avatar { width:56px; height:56px; background:rgba(255,255,255,.25); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:28px; flex-shrink:0; }
+.profile-name { font-family:var(--display); font-size:20px; margin-bottom:2px; }
+.profile-grade { font-size:13px; opacity:.8; }
+.context-input { width:100%; background:var(--surface); border:2px solid var(--border); color:var(--text); font-family:var(--sans); font-size:14px; padding:12px 14px; outline:none; border-radius:var(--radius); margin-bottom:8px; transition:border-color .15s; }
+.context-input:focus { border-color:var(--teal); }
+.save-btn { width:100%; padding:14px; background:var(--teal); color:white; border:none; font-family:var(--sans); font-size:15px; font-weight:700; border-radius:var(--radius); cursor:pointer; transition:opacity .15s; margin-top:4px; }
+.save-btn:active { opacity:.85; }
+
+/* ── Vocabulary Builder ── */
+.vocab-wrap { padding:16px 20px }
+.vocab-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px }
+.vocab-stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 10px; text-align:center }
+.vocab-stat-val { font-family:var(--display); font-size:28px; color:var(--teal); line-height:1; margin-bottom:4px }
+.vocab-stat-key { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:.06em }
+.vocab-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:10px; animation:fadeUp .3s ease both }
+.vocab-word { font-family:var(--display); font-size:22px; color:var(--text); margin-bottom:6px }
+.vocab-subject { font-size:11px; font-weight:700; color:var(--teal); background:var(--teal-dim); padding:3px 8px; border-radius:8px; display:inline-block; margin-bottom:10px }
+.vocab-context { font-size:13px; color:var(--text2); line-height:1.6; margin-bottom:10px; font-style:italic }
+.vocab-actions { display:flex; gap:8px }
+.vocab-btn { padding:8px 14px; border-radius:20px; font-family:var(--sans); font-size:12px; font-weight:700; cursor:pointer; border:none; transition:all .15s }
+.vocab-btn.know { background:var(--green-dim); color:var(--green) }
+.vocab-btn.know:active { background:var(--green); color:white }
+.vocab-btn.practice { background:var(--yellow-dim); color:#b8860b }
+.vocab-btn.practice:active { background:var(--yellow); color:white }
+.vocab-btn.explain { background:var(--teal-dim); color:var(--teal) }
+.vocab-btn.explain:active { background:var(--teal); color:white }
+.vocab-mastered { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--green); font-weight:700 }
+.vocab-empty { text-align:center; padding:48px 24px; color:var(--text3) }
+.vocab-filter-row { display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; margin-bottom:14px }
+.vocab-filter { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid var(--border); background:var(--surface); color:var(--text3); cursor:pointer; white-space:nowrap; transition:all .15s }
+.vocab-filter.active { border-color:var(--teal); background:var(--teal-dim); color:var(--teal) }
+
+/* ── API Key section in settings ── */
+.api-key-card { background:var(--surface); border:2px solid var(--border); border-radius:var(--radius); padding:16px; margin-bottom:8px; transition:border-color .2s }
+.api-key-card.has-key { border-color:rgba(58,175,110,.4) }
+.api-key-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:4px; display:flex; align-items:center; gap:8px }
+.api-key-status { font-size:11px; font-weight:700; padding:2px 8px; border-radius:8px }
+.api-key-status.set { background:var(--green-dim); color:var(--green) }
+.api-key-status.unset { background:var(--bg3); color:var(--text3) }
+.api-key-hint { font-size:11px; color:var(--text3); margin-bottom:10px; line-height:1.5 }
+.api-key-row { display:flex; gap:8px }
+.api-key-input { flex:1; background:var(--bg2); border:2px solid var(--border); color:var(--text); font-family:monospace; font-size:12px; padding:10px 12px; outline:none; border-radius:var(--radius-sm); transition:border-color .15s; letter-spacing:.03em }
+.api-key-input:focus { border-color:var(--teal) }
+.api-key-input::placeholder { color:var(--text3); font-family:var(--sans); letter-spacing:0 }
+.api-key-save { background:var(--teal); color:white; border:none; font-family:var(--sans); font-size:12px; font-weight:700; padding:10px 14px; border-radius:var(--radius-sm); cursor:pointer; white-space:nowrap; transition:opacity .15s }
+.api-key-save:active { opacity:.85 }
+.api-key-clear { font-size:11px; color:var(--coral); cursor:pointer; margin-top:6px; display:inline-block }
+
+/* ── File bar (data persistence) ── */
+#eduFileBar { position:fixed; bottom:var(--nav-h); left:50%; transform:translateX(-50%); width:100%; max-width:480px; z-index:150; padding:0 16px 6px; pointer-events:none }
+#eduFileBarInner { display:flex; align-items:center; gap:8px; padding:7px 14px; border-radius:20px; font-size:11px; font-weight:700; font-family:var(--sans); transition:all .4s; pointer-events:all; cursor:pointer; max-width:fit-content; margin:0 auto; opacity:0; transform:translateY(6px) }
+#eduFileBar.linked   #eduFileBarInner { background:rgba(58,175,110,.15); border:1px solid rgba(58,175,110,.3); color:var(--green); opacity:1; transform:translateY(0) }
+#eduFileBar.unlinked #eduFileBarInner { background:rgba(240,180,41,.12); border:1px solid rgba(240,180,41,.3); color:#b8860b; opacity:1; transform:translateY(0) }
+#eduFileBar.saving   #eduFileBarInner { background:rgba(43,158,143,.1); border:1px solid rgba(43,158,143,.25); color:var(--teal); opacity:1; transform:translateY(0) }
+.fbar-dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0 }
+
+/* ── Test date alert ── */
+.test-alert { background:rgba(232,99,74,.08); border:2px solid var(--coral); border-radius:var(--radius-sm); padding:10px 14px; margin-bottom:10px; display:flex; gap:10px; align-items:center; animation:popIn .3s ease }
+.test-alert-icon { font-size:20px; flex-shrink:0 }
+.test-alert-info { flex:1 }
+.test-alert-title { font-size:13px; font-weight:700; color:var(--coral) }
+.test-alert-sub { font-size:12px; color:var(--text3); margin-top:2px }
+
+/* ── Parent summary in review ── */
+.parent-summary-card { background:var(--teal-dim2); border:1px solid rgba(43,158,143,.2); border-radius:var(--radius); padding:14px 16px; margin-bottom:12px }
+.parent-summary-label { font-size:10px; font-weight:700; color:var(--teal); letter-spacing:.08em; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px }
+.parent-summary-text { font-size:13px; color:var(--text2); line-height:1.6 }
+
+/* ── Import sheet ── */
+#importFileInput { display:none }
+
+/* ── Share Routing Sheet ── */
+#shareRouteOverlay {
+  display:none; position:fixed; inset:0;
+  background:rgba(45,36,32,.5); z-index:300;
+  opacity:0; transition:opacity .25s; backdrop-filter:blur(2px);
+}
+#shareRouteOverlay.open   { display:block; }
+#shareRouteOverlay.visible{ opacity:1; }
+#shareRouteSheet {
+  position:fixed; bottom:0; left:50%;
+  transform:translateX(-50%) translateY(100%);
+  width:100%; max-width:480px;
+  background:var(--surface);
+  border-top:2px solid var(--border);
+  border-radius:20px 20px 0 0;
+  z-index:301; padding:0 0 40px;
+  transition:transform .32s cubic-bezier(.32,.72,0,1);
+}
+#shareRouteSheet.open { transform:translateX(-50%) translateY(0); }
+.srs-handle { width:40px; height:4px; background:var(--border2); border-radius:2px; margin:14px auto 18px; }
+.srs-title  { font-family:var(--display); font-size:18px; color:var(--text); text-align:center; margin-bottom:4px; }
+.srs-sub    { font-size:13px; color:var(--text3); text-align:center; margin-bottom:8px; }
+.srs-file-preview {
+  display:flex; align-items:center; gap:10px;
+  margin:0 20px 16px; padding:10px 14px;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+}
+.srs-file-icon  { font-size:24px; flex-shrink:0; }
+.srs-file-name  { font-size:12px; font-weight:700; color:var(--text); }
+.srs-file-size  { font-size:11px; color:var(--text3); }
+.srs-options    { padding:0 20px; display:flex; flex-direction:column; gap:10px; }
+.srs-option {
+  display:flex; align-items:center; gap:14px;
+  padding:16px; background:var(--bg);
+  border:2px solid var(--border); border-radius:var(--radius);
+  cursor:pointer; transition:all .15s;
+}
+.srs-option:active     { border-color:var(--teal); background:var(--teal-dim); transform:scale(.99); }
+.srs-option.selected   { border-color:var(--teal); background:var(--teal-dim); }
+.srs-opt-icon  { font-size:28px; flex-shrink:0; }
+.srs-opt-info  { flex:1; }
+.srs-opt-label { font-size:15px; font-weight:700; color:var(--text); margin-bottom:2px; }
+.srs-opt-sub   { font-size:12px; color:var(--text3); line-height:1.4; }
+.srs-opt-badge {
+  font-size:10px; font-weight:700; padding:3px 8px;
+  border-radius:8px; background:var(--teal-dim);
+  color:var(--teal); flex-shrink:0;
+}
+.srs-confirm {
+  width:calc(100% - 40px); margin:16px 20px 0;
+  padding:14px; background:var(--teal); color:white;
+  border:none; font-family:var(--sans); font-size:15px; font-weight:700;
+  border-radius:var(--radius); cursor:pointer; transition:opacity .15s;
+}
+.srs-confirm:disabled { opacity:.4; cursor:not-allowed; }
+.srs-confirm:active   { opacity:.85; }
+.srs-cancel {
+  display:block; text-align:center; margin-top:10px;
+  font-size:13px; color:var(--text3); cursor:pointer; padding:4px;
+}
+
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes popIn  { from{opacity:0;transform:scale(.97) translateY(8px)} to{opacity:1;transform:scale(1) translateY(0)} }
+
+.sheet-overlay.visible { opacity:1; }
+.sheet { position:fixed; bottom:0; left:50%; transform:translateX(-50%) translateY(100%); width:100%; max-width:480px; background:var(--surface); border-top:2px solid var(--border); border-radius:20px 20px 0 0; z-index:201; padding:0 0 36px; transition:transform .32s cubic-bezier(.32,.72,0,1); }
+.sheet.open { transform:translateX(-50%) translateY(0); }
+.sheet-handle { width:40px; height:4px; background:var(--border2); border-radius:2px; margin:14px auto 14px; }
+.sheet-title { font-family:var(--display); font-size:20px; color:var(--text); padding:0 20px 14px; border-bottom:1px solid var(--border); }
+.sheet-body { padding:16px 20px; }
+.sheet-types { display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; scrollbar-width:none; }
+.sheet-type { display:flex; align-items:center; gap:6px; padding:8px 14px; border:2px solid var(--border); background:var(--bg2); color:var(--text3); border-radius:20px; font-size:13px; font-weight:700; cursor:pointer; white-space:nowrap; transition:all .15s; flex-shrink:0; }
+.sheet-type.selected { border-color:var(--teal); background:var(--teal-dim); color:var(--teal); }
+.sheet-textarea { width:100%; min-height:100px; background:var(--bg2); border:2px solid var(--border); color:var(--text); font-family:var(--sans); font-size:15px; line-height:1.6; padding:14px; resize:none; outline:none; border-radius:var(--radius); margin-bottom:12px; transition:border-color .15s; }
+.sheet-textarea:focus { border-color:var(--teal); }
+.sheet-textarea::placeholder { color:var(--text3); }
+.sheet-submit { width:100%; padding:15px; background:var(--coral); color:white; border:none; font-family:var(--sans); font-size:15px; font-weight:700; cursor:pointer; border-radius:var(--radius); transition:opacity .15s; }
+.sheet-submit:active { opacity:.85; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.module-card:nth-child(1){animation-delay:.04s} .module-card:nth-child(2){animation-delay:.08s}
+.module-card:nth-child(3){animation-delay:.12s} .module-card:nth-child(4){animation-delay:.16s}
+.module-card:nth-child(5){animation-delay:.20s} .module-card:nth-child(6){animation-delay:.24s}
+</style>
+</head>
+<body>
+
+<!-- ══ ONBOARDING ════════════════════════════════════ -->
+<div id="onboarding">
+  <div class="onboard-progress" id="onboardProgress"></div>
+  <div class="onboard-emoji" id="onboardEmoji">👋</div>
+  <div class="onboard-question" id="onboardQ">Hi! What's your name?</div>
+  <div class="onboard-sub" id="onboardSub">This is your own learning space</div>
+  <input class="onboard-input" id="onboardInput" placeholder="Type here..." style="display:none">
+  <div class="onboard-options" id="onboardOptions"></div>
+  <button class="onboard-next" id="onboardNext" onclick="nextOnboard()">Next →</button>
+</div>
+
+<div id="app">
+
+<!-- ══ HOME ══════════════════════════════════════════ -->
+<div id="screen-home" class="screen active">
+  <div class="scroll-area">
+    <div class="home-hero">
+      <div class="hero-greeting" id="heroGreeting">Hello! 👋</div>
+      <div class="hero-date" id="heroDate"></div>
+      <div class="streak-pill" id="streakPill">🔥 0 day streak</div>
+    </div>
+    <div class="section-head">Subjects</div>
+    <div class="subject-chips" id="subjectChips"></div>
+    <div class="section-head">Your tools</div>
+    <div id="testAlerts"></div>
+    <div class="card-grid">
+      <div class="module-card" onclick="navTo('journal')">
+        <span class="card-icon">🎙️</span>
+        <div class="card-name">My Day</div>
+        <div class="card-stat" id="journalStat">Tell me about today</div>
+      </div>
+      <div class="module-card" onclick="navTo('files')">
+        <span class="card-icon">📄</span>
+        <div class="card-name">School Files</div>
+        <div class="card-stat" id="filesStat">Photos & notes</div>
+      </div>
+      <div class="module-card" onclick="navTo('curiosity')">
+        <span class="card-icon">🌟</span>
+        <div class="card-name">Curiosity Log</div>
+        <div class="card-stat" id="curiosityStat">Ask anything</div>
+      </div>
+      <div class="module-card" onclick="navTo('explain')">
+        <span class="card-icon">💡</span>
+        <div class="card-name">Explanations</div>
+        <div class="card-stat" id="explainStat">Get help understanding</div>
+      </div>
+      <div class="module-card" onclick="navTo('subjects')">
+        <span class="card-icon">📚</span>
+        <div class="card-name">Subjects</div>
+        <div class="card-stat">Track your learning</div>
+      </div>
+      <div class="module-card" onclick="navTo('vocab')">
+        <span class="card-icon">📖</span>
+        <div class="card-name">Vocabulary</div>
+        <div class="card-stat" id="vocabStat">Words from your files</div>
+      </div>
+      <div class="module-card wide" onclick="navTo('review')">
+        <span class="card-icon">🏆</span>
+        <div class="card-name">My Week</div>
+        <div class="card-stat">Wins and progress</div>
+      </div>
+    </div>
+    <div class="section-head">From your learning</div>
+    <div class="insight-card" id="insightCard">
+      <div class="insight-row">
+        <div class="insight-dot dot-teal"></div>
+        <div class="insight-text">Start logging your learning — your insights will appear here!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ JOURNAL (VOICE + TEXT) ════════════════════════ -->
+<div id="screen-journal" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🎙️ My Day</div>
+      <div class="topbar-sub">Talk or type about your day</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="journal-wrap">
+
+      <!-- Voice recorder -->
+      <div class="voice-recorder">
+        <div class="recorder-label">Speak about your day</div>
+        <div class="recorder-sub">What did you learn? What was fun? What confused you?</div>
+        <div class="record-btn" id="recordBtn" onclick="toggleRecording()">🎙️</div>
+        <div class="record-timer" id="recordTimer"></div>
+        <div class="lang-pills">
+          <div class="lang-pill active" onclick="setLang(this,'en-IN')">English</div>
+          <div class="lang-pill" onclick="setLang(this,'hi-IN')">हिंदी</div>
+          <div class="lang-pill" onclick="setLang(this,'te-IN')">తెలుగు</div>
+        </div>
+      </div>
+
+      <!-- OR divider -->
+      <div style="text-align:center;color:var(--text3);font-size:12px;font-weight:700;margin-bottom:12px;letter-spacing:.08em;">— OR TYPE —</div>
+
+      <!-- Transcript / text area -->
+      <div class="transcript-box" id="transcriptBox">
+        <div class="transcript-placeholder" id="transcriptPlaceholder">
+          Your spoken words will appear here...<br>Or tap to type directly.
+        </div>
+        <textarea class="transcript-edit" id="transcriptEdit"
+          oninput="onTranscriptEdit()"
+          placeholder="Type about your day here..."></textarea>
+      </div>
+
+      <div class="transcript-actions">
+        <button class="btn-analyse" id="analyseBtn" onclick="analyseJournal()" disabled>✨ Analyse my day</button>
+        <button class="btn-clear" onclick="clearJournal()">Clear</button>
+      </div>
+
+      <!-- Analysis result -->
+      <div id="analysisResult"></div>
+
+      <!-- Save button (shown after analysis) -->
+      <button class="save-journal-btn" id="saveJournalBtn" onclick="saveJournal()" style="display:none">
+        💾 Save to my journal
+      </button>
+
+      <!-- Past entries -->
+      <div class="saved-label" style="margin-top:8px">Past journal entries</div>
+      <div id="journalEntries"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SCHOOL FILES ═══════════════════════════════════ -->
+<div id="screen-files" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">📄 School Files</div>
+      <div class="topbar-sub">Photos, PDFs, and notes</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="files-wrap">
+
+      <!-- Upload methods -->
+      <div class="upload-methods">
+        <div class="upload-method" onclick="document.getElementById('fileInputCamera').click()">
+          <div class="upload-method-icon">📷</div>
+          <div class="upload-method-label">Take Photo</div>
+          <div class="upload-method-sub">Photograph a worksheet</div>
+        </div>
+        <div class="upload-method" onclick="document.getElementById('fileInputImage').click()">
+          <div class="upload-method-icon">🖼️</div>
+          <div class="upload-method-label">Choose Image</div>
+          <div class="upload-method-sub">From your gallery</div>
+        </div>
+        <div class="upload-method" onclick="document.getElementById('fileInputPDF').click()">
+          <div class="upload-method-icon">📋</div>
+          <div class="upload-method-label">Pick PDF</div>
+          <div class="upload-method-sub">Handout or paper</div>
+        </div>
+        <div class="upload-method" onclick="openSheet('note')">
+          <div class="upload-method-icon">✏️</div>
+          <div class="upload-method-label">Type Notes</div>
+          <div class="upload-method-sub">Paste or type text</div>
+        </div>
+      </div>
+
+      <!-- Hidden file inputs -->
+      <input type="file" id="fileInputCamera" accept="image/*" capture="environment" onchange="handleFileUpload(this,'photo')">
+      <input type="file" id="fileInputImage"  accept="image/*" onchange="handleFileUpload(this,'image')">
+      <input type="file" id="fileInputPDF"    accept=".pdf,application/pdf" onchange="handleFileUpload(this,'pdf')">
+
+      <!-- Processing / result -->
+      <div id="fileProcessing"></div>
+      <div id="fileResult"></div>
+
+      <!-- Saved files -->
+      <div class="saved-label">Saved school files</div>
+      <div id="savedFilesList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SUBJECTS ═══════════════════════════════════════ -->
+<div id="screen-subjects" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">📚 Subjects</div>
+      <div class="topbar-sub">Tap to log what you studied</div>
+    </div>
+    <button class="icon-btn text" onclick="openSheet('topic')">+ Log</button>
+  </div>
+  <div class="scroll-area">
+    <div class="subject-list" id="subjectList"></div>
+  </div>
+</div>
+
+<!-- ══ CURIOSITY ══════════════════════════════════════ -->
+<div id="screen-curiosity" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🌟 Curiosity Log</div>
+      <div class="topbar-sub">Things you wondered about</div>
+    </div>
+    <button class="icon-btn text" onclick="openSheet('curious')">Ask</button>
+  </div>
+  <div class="scroll-area">
+    <div class="curiosity-wrap" id="curiosityList">
+      <div class="curiosity-empty">
+        <div class="curiosity-empty-icon">🤔</div>
+        <div style="font-size:14px;line-height:1.6">When you wonder about something,<br>tap <strong>Ask</strong> and type your question!</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ EXPLANATIONS ═══════════════════════════════════ -->
+<div id="screen-explain" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">💡 Explanations</div>
+      <div class="topbar-sub">Understand anything better</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="explain-wrap">
+      <div class="explain-input-row">
+        <input class="explain-input" id="explainTopic" placeholder="What do you want to understand?" />
+        <button class="btn-primary" id="explainBtn" onclick="getExplanation()">Go!</button>
+      </div>
+      <div id="explanationResults"></div>
+      <div class="saved-explanations">
+        <div class="saved-label">Saved explanations</div>
+        <div id="savedList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ REVIEW ═════════════════════════════════════════ -->
+<div id="screen-review" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🏆 My Week</div>
+      <div class="topbar-sub">Wins and what you learned</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="review-wrap">
+      <div class="review-hero">
+        <div class="review-hero-title" id="reviewHeroTitle">How's it going?</div>
+        <div class="review-hero-sub">Here's your learning summary</div>
+      </div>
+      <div class="review-stats">
+        <div class="stat-card"><div class="stat-val teal"   id="rTopics">0</div><div class="stat-key">Topics</div></div>
+        <div class="stat-card"><div class="stat-val purple" id="rJournal">0</div><div class="stat-key">Days</div></div>
+        <div class="stat-card"><div class="stat-val coral"  id="rCurious">0</div><div class="stat-key">Questions</div></div>
+        <div class="stat-card"><div class="stat-val green"  id="rFiles">0</div><div class="stat-key">Files</div></div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-head"><span>🏆</span><span class="review-card-title">Your wins</span></div>
+        <div class="review-card-body" id="winsList">
+          <div style="color:var(--text3);font-size:13px;text-align:center;padding:16px 0">Keep learning — your wins will appear here!</div>
+        </div>
+      </div>
+      <button class="generate-btn" onclick="generateReview()">✨ Generate my weekly review</button>
+      <div id="parentSummaryCard" style="display:none" class="parent-summary-card">
+        <div class="parent-summary-label">👨‍👩‍👧 For parents</div>
+        <div class="parent-summary-text" id="parentSummaryText"></div>
+      </div>
+      <div id="reviewOutput" style="display:none" class="review-card">
+        <div class="review-card-head"><span>✨</span><span class="review-card-title">Your weekly review</span></div>
+        <div class="review-card-body"><div id="reviewText" style="font-size:14px;color:var(--text2);line-height:1.7"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SETTINGS ═══════════════════════════════════════ -->
+<div id="screen-settings" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">⚙️ Settings</div>
+      <div class="topbar-sub">Profile & preferences</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="settings-wrap">
+      <div class="profile-card">
+        <div class="profile-avatar">🧒</div>
+        <div>
+          <div class="profile-name" id="profileName">Student</div>
+          <div class="profile-grade" id="profileGrade">Grade 4</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">My profile</div>
+        <input class="context-input" id="ctxName"        placeholder="My name" />
+        <input class="context-input" id="ctxGrade"       placeholder="My class / grade" />
+        <input class="context-input" id="ctxFavSubject"  placeholder="My favourite subject" />
+        <input class="context-input" id="ctxHardSubject" placeholder="What I find hardest" />
+        <input class="context-input" id="ctxInterests"   placeholder="Things I'm interested in" />
+        <button class="save-btn" onclick="saveContext()">Save my profile</button>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">AI Providers</div>
+
+        <!-- Cloud: Claude -->
+        <div class="api-key-card" id="claudeKeyCard">
+          <div class="api-key-label">🧠 Claude <span class="api-key-status unset" id="claudeKeyStatus">Not set</span></div>
+          <div class="api-key-hint">Best for complex tasks — voice analysis, file reading, explanations. Get key at <strong>console.anthropic.com</strong></div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="claudeKeyInput" type="password" placeholder="sk-ant-..." autocomplete="off">
+            <button class="api-key-save" onclick="saveApiKey()">Save</button>
+          </div>
+          <span class="api-key-clear" id="claudeKeyClear" onclick="clearApiKey()" style="display:none">Remove</span>
+        </div>
+
+        <!-- Cloud: Groq (free) -->
+        <div class="api-key-card" id="groqKeyCard">
+          <div class="api-key-label">⚡ Groq — free <span class="api-key-status unset" id="groqKeyStatus">Not set</span></div>
+          <div class="api-key-hint">Fast and free — good for simple tasks. Get key at <strong>console.groq.com</strong> (no credit card needed)</div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="groqKeyInput" type="password" placeholder="gsk_..." autocomplete="off">
+            <button class="api-key-save" onclick="saveCloudKey('groq','groqKeyInput','groqKeyStatus','groqKeyCard')">Save</button>
+          </div>
+        </div>
+
+        <!-- Cloud: Gemini (free vision) -->
+        <div class="api-key-card" id="geminiKeyCard">
+          <div class="api-key-label">✨ Gemini Flash — free <span class="api-key-status unset" id="geminiKeyStatus">Not set</span></div>
+          <div class="api-key-hint">Free tier with vision — great for reading photos of worksheets. Get key at <strong>aistudio.google.com</strong> (no credit card needed)</div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="geminiKeyInput" type="password" placeholder="AIza..." autocomplete="off">
+            <button class="api-key-save" onclick="saveCloudKey('gemini','geminiKeyInput','geminiKeyStatus','geminiKeyCard')">Save</button>
+          </div>
+        </div>
+
+        <!-- Cloud: OpenAI -->
+        <div class="api-key-card" id="openaiKeyCard">
+          <div class="api-key-label">🤖 OpenAI <span class="api-key-status unset" id="openaiKeyStatus">Not set</span></div>
+          <div class="api-key-hint">GPT-4o mini — good vision and JSON output. Get key at <strong>platform.openai.com</strong></div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="openaiKeyInput" type="password" placeholder="sk-..." autocomplete="off">
+            <button class="api-key-save" onclick="saveCloudKey('openai','openaiKeyInput','openaiKeyStatus','openaiKeyCard')">Save</button>
+          </div>
+        </div>
+
+        <!-- Local: Gemma 4 -->
+        <div class="api-key-card" id="localKeyCard">
+          <div class="api-key-label">📱 Gemma 4 local <span class="api-key-status unset" id="localKeyStatus">Not tested</span></div>
+          <div class="api-key-hint">Runs on your phone via Ollama or AI Edge Gallery. <strong>Fully private, no cost, works offline.</strong> No key needed — just set the server URL.</div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:4px">Server URL</div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="localUrlInput" type="text" value="http://localhost:11434" placeholder="http://localhost:11434" style="font-size:12px">
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin:8px 0 4px">Model name</div>
+          <div class="api-key-row">
+            <input class="api-key-input" id="localModelInput" type="text" value="gemma4:2b" placeholder="gemma4:2b" style="font-size:12px">
+            <button class="api-key-save" onclick="saveLocalUrl()">Save</button>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="api-key-save" style="flex:1;background:var(--teal)" onclick="testLocalProvider()">🔍 Test connection</button>
+          </div>
+          <div id="localProviderStatus" style="font-size:11px;color:var(--text3);margin-top:6px;min-height:16px"></div>
+        </div>
+
+        <div style="font-size:12px;color:var(--text3);line-height:1.6;padding:10px 4px;border-top:1px solid var(--border);margin-top:4px">
+          💡 <strong>How routing works:</strong> You only need one key to get started.
+          <br>📷 <strong>Photos &amp; PDFs</strong> → Gemma local → Gemini → Claude → OpenAI
+          <br>✏️ <strong>Simple tasks</strong> → Gemma local → Groq → Gemini → Claude
+          <br>🧠 <strong>Deep analysis</strong> → Claude → Gemini → Groq
+          <br>🌟 <strong>Curiosity &amp; explanations</strong> → Claude → Gemini → Groq
+          <br>The app always falls back to whatever you have configured.
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Data file</div>
+        <div class="settings-row" onclick="eduFsaLink()" id="settingsFileRow">
+          <span class="settings-row-icon">📁</span>
+          <div class="settings-row-info">
+            <div class="settings-row-label" id="settingsFileLabel">No folder linked</div>
+            <div class="settings-row-sub" id="settingsFileSub">Tap to choose a folder in Google Drive — saves data + files</div>
+          </div>
+          <div class="settings-row-right">›</div>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-title">Data</div>
+        <div class="settings-row" onclick="exportData()">
+          <span class="settings-row-icon">📤</span>
+          <div class="settings-row-info"><div class="settings-row-label">Export my data</div><div class="settings-row-sub">Download as JSON backup</div></div>
+          <div class="settings-row-right">›</div>
+        </div>
+        <div class="settings-row" onclick="document.getElementById('importFileInput').click()">
+          <span class="settings-row-icon">📥</span>
+          <div class="settings-row-info"><div class="settings-row-label">Import from backup</div><div class="settings-row-sub">Restore from a JSON export</div></div>
+          <div class="settings-row-right">›</div>
+        </div>
+        <input type="file" id="importFileInput" accept=".json,application/json" onchange="importData(this)">
+        <div class="settings-row" onclick="clearData()">
+          <span class="settings-row-icon">🗑️</span>
+          <div class="settings-row-info"><div class="settings-row-label">Clear all data</div><div class="settings-row-sub">Cannot be undone</div></div>
+          <div class="settings-row-right" style="color:var(--coral)">›</div>
+        </div>
+      </div>
+      <div class="settings-section">
+        <div class="settings-title">About</div>
+        <div class="settings-row">
+          <span class="settings-row-icon">🎓</span>
+          <div class="settings-row-info"><div class="settings-row-label">EduOS</div><div class="settings-row-sub" id="aboutVersion">Loading...</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ VOCABULARY BUILDER ════════════════════════════ -->
+<div id="screen-vocab" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">📖 Vocabulary</div>
+      <div class="topbar-sub">Words from your learning</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn text" onclick="renderVocab()">Refresh</button>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="vocab-wrap">
+      <div class="vocab-stats">
+        <div class="vocab-stat"><div class="vocab-stat-val" id="vocabTotal">0</div><div class="vocab-stat-key">Words</div></div>
+        <div class="vocab-stat"><div class="vocab-stat-val" id="vocabMastered" style="color:var(--green)">0</div><div class="vocab-stat-key">Mastered</div></div>
+        <div class="vocab-stat"><div class="vocab-stat-val" id="vocabPractice" style="color:var(--yellow)">0</div><div class="vocab-stat-key">Practising</div></div>
+      </div>
+      <div class="vocab-filter-row" id="vocabFilters"></div>
+      <div id="vocabList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BOTTOM NAV ═════════════════════════════════════ -->
+
+<nav class="bottom-nav">
+  <button class="nav-item active" id="nav-home"     onclick="navTo('home')">     <span class="nav-icon">🏠</span><span class="nav-label">Home</span></button>
+  <button class="nav-item"        id="nav-journal"  onclick="navTo('journal')">  <span class="nav-icon">🎙️</span><span class="nav-label">My Day</span></button>
+  <button class="nav-item nav-capture"              onclick="navTo('files')">    <div class="nav-capture-inner">📄</div></button>
+  <button class="nav-item"        id="nav-subjects" onclick="navTo('subjects')"> <span class="nav-icon">📚</span><span class="nav-label">Subjects</span></button>
+  <button class="nav-item"        id="nav-settings" onclick="navTo('settings')"> <span class="nav-icon">⚙️</span><span class="nav-label">Settings</span></button>
+</nav>
+</div>
+
+<!-- ══ FILE STATUS BAR ════════════════════════════════ -->
+<div id="eduFileBar">
+  <div id="eduFileBarInner" onclick="eduFsaLink()">
+    <div class="fbar-dot"></div>
+    <span id="eduFileBarText">Tap to link a data file</span>
+  </div>
+</div>
+
+<!-- ══ SHARE ROUTING SHEET ════════════════════════════ -->
+<div id="shareRouteOverlay" onclick="closeShareRoute()"></div>
+<div id="shareRouteSheet">
+  <div class="srs-handle"></div>
+  <div class="srs-title">Where should this go?</div>
+  <div class="srs-sub">Choose how to use this file</div>
+
+  <!-- File preview -->
+  <div class="srs-file-preview" id="srsFilePreview">
+    <div class="srs-file-icon" id="srsFileIcon">📷</div>
+    <div>
+      <div class="srs-file-name" id="srsFileName">Shared file</div>
+      <div class="srs-file-size" id="srsFileSize"></div>
+    </div>
+  </div>
+
+  <!-- Route options -->
+  <div class="srs-options">
+    <div class="srs-option" id="srsOptFiles" onclick="selectShareRoute('files')">
+      <div class="srs-opt-icon">📄</div>
+      <div class="srs-opt-info">
+        <div class="srs-opt-label">School Files</div>
+        <div class="srs-opt-sub">Worksheet, handout, question paper — extracts topics, vocab, homework & test dates</div>
+      </div>
+      <span class="srs-opt-badge">Recommended</span>
+    </div>
+
+    <div class="srs-option" id="srsOptNotes" onclick="selectShareRoute('notes')">
+      <div class="srs-opt-icon">📚</div>
+      <div class="srs-opt-info">
+        <div class="srs-opt-label">Class Notes</div>
+        <div class="srs-opt-sub">Photo of board or notebook — logs topics directly to your subject tracker</div>
+      </div>
+    </div>
+
+    <div class="srs-option" id="srsOptCuriosity" onclick="selectShareRoute('curiosity')">
+      <div class="srs-opt-icon">🌟</div>
+      <div class="srs-opt-info">
+        <div class="srs-opt-label">Curiosity Log</div>
+        <div class="srs-opt-sub">Something interesting you saw or read — Claude will explain and expand it</div>
+      </div>
+    </div>
+  </div>
+
+  <button class="srs-confirm" id="srsConfirm" onclick="confirmShareRoute()" disabled>
+    Process →
+  </button>
+  <div class="srs-cancel" onclick="closeShareRoute()">Cancel</div>
+</div>
+
+<!-- ══ CAPTURE SHEET ═════════════════════════════════ -->
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="sheet" id="captureSheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="sheetTitle">What are you curious about?</div>
+  <div class="sheet-body">
+    <div class="sheet-types" id="sheetTypes"></div>
+    <textarea class="sheet-textarea" id="sheetText" placeholder="Type here..."></textarea>
+    <button class="sheet-submit" onclick="saveSheet()">Save ✓</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════
+const KEYS = {
+  context:'eduos_context_v1', topics:'eduos_topics_v1',
+  curiosities:'eduos_curiosities_v1', explanations:'eduos_explanations_v1',
+  journals:'eduos_journals_v1', files:'eduos_files_v1',
+  vocab:'eduos_vocab_v1', onboarded:'eduos_onboarded_v1'
+};
+const FILE_NAME_LS  = 'eduos_file_name_v1';
+const API_KEYS_LS   = 'eduos_api_keys_v1';
+const FSA_SUPPORTED = 'showDirectoryPicker' in window;
+
+const SUBJECTS = [
+  {id:'maths',   name:'Mathematics',     icon:'🔢'},
+  {id:'english', name:'English',         icon:'📖'},
+  {id:'science', name:'Science / EVS',   icon:'🔬'},
+  {id:'social',  name:'Social Studies',  icon:'🌍'},
+  {id:'hindi',   name:'Hindi',           icon:'🇮🇳'},
+  {id:'telugu',  name:'Telugu',          icon:'🌺'},
+  {id:'cs',      name:'Computer Science',icon:'💻'},
+];
+
+let state = {
+  context:     {name:'',grade:'4',favSubject:'',hardSubject:'',interests:''},
+  topics:      [],
+  curiosities: [],
+  explanations:[],
+  journals:    [],
+  files:       [],
+  vocab:       []
+};
+
+// ── Shared AI provider system (same as Life OS) ───────
+let apiKeys = { claude:'', groq:'', gemini:'', openai:'',
+                gemma_local_url:'', gemma_local_model:'gemma4:2b',
+                openai_compat_url:'', openai_compat_model:'' };
+let localProviderStatus = {};
+
+// EduOS task → provider routing
+// Tasks: 'vision' (images/PDFs), 'text' (reasoning), 'simple' (basic), 'search'
+// 'auto' = prefer local if running, else best available cloud
+const TASK_ROUTING = {
+  vision:  'auto',    // gemma_local (vision) → gemini (free vision) → claude
+  text:    'auto',    // gemma_local → groq → claude
+  simple:  'auto',    // gemma_local → groq (fastest/free) → claude
+  search:  'claude'   // only claude has search — never auto
+};
+
+// Shared PROVIDERS definition (same as Life OS — duplicated for standalone)
+const PROVIDERS = {
+  claude: {
+    name:'claude', label:'Claude', subtitle:'claude-sonnet-4-20250514',
+    icon:'🧠', type:'cloud',
+    strengths:['Deep reasoning','Documents & PDFs','Web search','Best for complex tasks'],
+    hasSearch:true, hasVision:true, hasAudio:false, costTier:'medium',
+    keyPrefix:'sk-ant-', keyLink:'https://console.anthropic.com/settings/keys',
+    keyHint:'Get your key from console.anthropic.com',
+    call: async (key, prompt, opts={}) => {
+      const body = { model:'claude-sonnet-4-20250514', max_tokens:opts.maxTokens||1000,
+        messages:[{role:'user', content:opts.images||prompt}] };
+      if (opts.system) body.system = opts.system;
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method:'POST',
+        headers:{'Content-Type':'application/json','x-api-key':key,
+          'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+        body: JSON.stringify(body)
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      return d.content?.filter(b=>b.type==='text').map(b=>b.text).join('')||'';
+    }
+  },
+  groq: {
+    name:'groq', label:'Groq', subtitle:'Llama 3.3 70B — fastest inference',
+    icon:'⚡', type:'cloud',
+    strengths:['Fastest responses','Free tier','Simple tasks'],
+    hasSearch:false, hasVision:false, hasAudio:false, costTier:'free',
+    keyPrefix:'gsk_', keyLink:'https://console.groq.com/keys',
+    keyHint:'Free tier at console.groq.com',
+    call: async (key, prompt, opts={}) => {
+      const messages = opts.system ? [{role:'system',content:opts.system}] : [];
+      messages.push({role:'user',content:prompt});
+      const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},
+        body:JSON.stringify({model:'llama-3.3-70b-versatile',messages,max_tokens:opts.maxTokens||800})
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message||JSON.stringify(d.error));
+      return d.choices?.[0]?.message?.content||'';
+    }
+  },
+
+  gemini: {
+    name:'gemini', label:'Gemini', subtitle:'Gemini 2.0 Flash — fast, free & multimodal',
+    icon:'✨', type:'cloud',
+    strengths:['Free tier','Fast','Multimodal (images)','Good for explanations'],
+    hasSearch:true, hasVision:true, hasAudio:false, costTier:'free',
+    keyPrefix:'AIza', keyLink:'https://aistudio.google.com/app/apikey',
+    keyHint:'Free tier at aistudio.google.com — no credit card needed',
+    call: async (key, prompt, opts={}) => {
+      const parts = [{ text: (opts.system ? opts.system+'\n\n' : '') + prompt }];
+      // Vision: inline image
+      if (opts.images) {
+        const img = opts.images.find(b => b.type==='image'||b.type==='document');
+        if (img?.source?.data) {
+          parts.unshift({ inline_data:{ mime_type:img.source.media_type, data:img.source.data } });
+        }
+      }
+      const body = { contents:[{ parts }] };
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`,
+        { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body) }
+      );
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    }
+  },
+
+  openai: {
+    name:'openai', label:'OpenAI', subtitle:'GPT-4o mini — capable & affordable',
+    icon:'🤖', type:'cloud',
+    strengths:['Strong vision','Reliable','Good JSON output','Widely supported'],
+    hasSearch:false, hasVision:true, hasAudio:false, costTier:'low',
+    keyPrefix:'sk-', keyLink:'https://platform.openai.com/api-keys',
+    keyHint:'Get your key from platform.openai.com',
+    call: async (key, prompt, opts={}) => {
+      const messages = opts.system ? [{role:'system',content:opts.system}] : [];
+      if (opts.images) {
+        const img = opts.images.find(b => b.type==='image'||b.type==='document');
+        const content = img?.source?.data
+          ? [
+              { type:'image_url', image_url:{ url:`data:${img.source.media_type};base64,${img.source.data}` } },
+              { type:'text', text: prompt }
+            ]
+          : prompt;
+        messages.push({ role:'user', content });
+      } else {
+        messages.push({ role:'user', content:prompt });
+      }
+      const res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method:'POST',
+        headers:{'Authorization':`Bearer ${key}`,'Content-Type':'application/json'},
+        body:JSON.stringify({ model:'gpt-4o-mini', messages, max_tokens:opts.maxTokens||800 })
+      });
+      const d = await res.json();
+      if (d.error) throw new Error(d.error.message);
+      return d.choices?.[0]?.message?.content||'';
+    }
+  },
+  gemma_local: {
+    name:'gemma_local', label:'Gemma 4 (local)', subtitle:'E2B/E4B — on-device, fully private',
+    icon:'📱', type:'local',
+    strengths:['Fully private','No cost','Works offline','Fast on-device'],
+    hasSearch:false, hasVision:true, hasAudio:true, costTier:'free',
+    keyPrefix:null, modelName:'gemma4:2b',
+    keyLink:'https://developers.googleblog.com/bring-state-of-the-art-agentic-skills-to-the-edge-with-gemma-4/',
+    keyHint:'Runs via AI Edge Gallery or Ollama. No key needed.',
+    call: async (key, prompt, opts={}) => {
+      const endpoint  = apiKeys['gemma_local_url'] || 'http://localhost:11434';
+      const modelName = apiKeys['gemma_local_model'] || 'gemma4:2b';
+      const messages  = opts.system ? [{role:'system',content:opts.system}] : [];
+      if (opts.images) {
+        const img = opts.images.find(b=>b.type==='image'||b.type==='document');
+        messages.push({role:'user', content: img?.source?.data
+          ? [{type:'image_url',image_url:{url:`data:${img.source.media_type};base64,${img.source.data}`}},{type:'text',text:prompt}]
+          : prompt});
+      } else {
+        messages.push({role:'user',content:prompt});
+      }
+      const res = await fetch(`${endpoint}/v1/chat/completions`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:modelName,messages,max_tokens:opts.maxTokens||800,stream:false})
+      });
+      if (!res.ok) throw new Error(`Local model error: ${res.status}`);
+      const d = await res.json();
+      return d.choices?.[0]?.message?.content||'';
+    }
+  },
+  openai_compat: {
+    name:'openai_compat', label:'Local (any model)', subtitle:'Ollama, LM Studio, Jan',
+    icon:'🖥️', type:'local',
+    strengths:['Any local model','Fully private','No cost','Configurable'],
+    hasSearch:false, hasVision:false, hasAudio:false, costTier:'free',
+    keyPrefix:null, modelName:'',
+    keyLink:'https://ollama.com',
+    keyHint:'Works with Ollama, LM Studio, Jan — set endpoint and model name.',
+    call: async (key, prompt, opts={}) => {
+      const endpoint  = apiKeys['openai_compat_url']   || 'http://localhost:11434';
+      const modelName = apiKeys['openai_compat_model'] || 'llama3.2';
+      const messages  = opts.system ? [{role:'system',content:opts.system}] : [];
+      messages.push({role:'user',content:prompt});
+      const res = await fetch(`${endpoint}/v1/chat/completions`, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({model:modelName,messages,max_tokens:opts.maxTokens||800,stream:false})
+      });
+      if (!res.ok) throw new Error(`Local model error: ${res.status}`);
+      const d = await res.json();
+      return d.choices?.[0]?.message?.content||'';
+    }
+  }
+};
+
+function isProviderAvailable(name) {
+  const p = PROVIDERS[name];
+  if (!p) return false;
+  if (p.type==='local') return localProviderStatus[name]===true;
+  return !!(apiKeys[name]);
+}
+
+async function pingLocalProvider(name) {
+  const p = PROVIDERS[name];
+  if (!p || p.type!=='local') return false;
+  try {
+    const endpoint = apiKeys[`${name}_url`]||'http://localhost:11434';
+    const res = await fetch(`${endpoint}/api/tags`,{method:'GET',signal:AbortSignal.timeout(2000)});
+    localProviderStatus[name] = res.ok;
+    return res.ok;
+  } catch { localProviderStatus[name]=false; return false; }
+}
+
+async function pingAllLocalProviders() {
+  await Promise.all(Object.keys(PROVIDERS).filter(k=>PROVIDERS[k].type==='local').map(pingLocalProvider));
+  updateApiKeyUI();
+}
+
+// ── Unified AI call for EduOS ─────────────────────────
+// task: 'vision' | 'text' | 'simple'
+// Mirrors Life OS callAI but task-based instead of module-based
+async function callClaude(prompt, opts={}) {
+  // Determine task type from opts
+  const task = opts.task || (opts.images ? 'vision' : opts.simple ? 'simple' : 'text');
+
+  // Build priority: task routing → auto-select → fallback
+  let providerName = opts.provider || TASK_ROUTING[task] || 'auto';
+
+  if (providerName === 'auto') {
+    // Prefer local if available and capable for this task
+    if (task !== 'search') {
+      const localCandidates = Object.keys(PROVIDERS)
+        .filter(k => PROVIDERS[k].type==='local' && isProviderAvailable(k));
+      if (task === 'vision') {
+        const visionLocal = localCandidates.find(k => PROVIDERS[k].hasVision);
+        if (visionLocal) providerName = visionLocal;
+      } else if (localCandidates.length) {
+        providerName = localCandidates[0];
+      }
+    }
+    // Cloud fallback — pick best available for task
+    if (providerName === 'auto') {
+      if (task === 'vision') {
+        // Vision priority: claude (best) → gemini (free) → openai
+        providerName = ['claude','gemini','openai'].find(k => apiKeys[k]) || 'claude';
+      } else if (task === 'simple') {
+        // Simple priority: groq (fastest/free) → gemini (free) → claude
+        providerName = ['groq','gemini','claude'].find(k => apiKeys[k]) || 'claude';
+      } else {
+        // Text reasoning priority: claude → gemini → groq
+        providerName = ['claude','gemini','groq'].find(k => apiKeys[k]) || 'claude';
+      }
+    }
+  }
+
+  const provider = PROVIDERS[providerName];
+  if (!provider) throw new Error(`Unknown provider: ${providerName}`);
+  if (provider.type==='local' && !isProviderAvailable(providerName)) {
+    // Local not reachable — fall back to cloud
+    const cloudFallback = ['claude','gemini','groq','openai'].find(k => apiKeys[k]);
+    if (!cloudFallback) throw new Error('No AI providers available — add a key in Settings ⚙️, or start your local model server.');
+    return callClaude(prompt, {...opts, provider:cloudFallback});
+  }
+  if (provider.type==='cloud' && !apiKeys[providerName]) {
+    const anyKey = ['claude','gemini','groq','openai'].find(k => apiKeys[k]);
+    if (!anyKey) throw new Error('No API key set — add your Claude key in Settings ⚙️');
+    return callClaude(prompt, {...opts, provider:anyKey});
+  }
+
+  return provider.call(apiKeys[providerName]||'', prompt, opts);
+}
+
+// ── API key storage ───────────────────────────────────
+function saveApiKeys() {
+  try { localStorage.setItem(API_KEYS_LS, JSON.stringify(apiKeys)); } catch(_){}
+}
+function loadApiKeys() {
+  try {
+    const s = localStorage.getItem(API_KEYS_LS);
+    if (s) Object.assign(apiKeys, JSON.parse(s));
+    // Backward compat: migrate old single key
+    const old = localStorage.getItem('eduos_api_key_v1');
+    if (old && !apiKeys.claude) { apiKeys.claude = old; saveApiKeys(); }
+  } catch(_){}
+}
+
+function saveApiKey() {
+  const val = document.getElementById('claudeKeyInput').value.trim();
+  if (!val) return;
+  apiKeys.claude = val;
+  saveApiKeys();
+  document.getElementById('claudeKeyInput').value = '';
+  updateApiKeyUI();
+  showKeyFeedback('✓ Saved!');
+  setTimeout(() => pingAllLocalProviders(), 200);
+}
+
+function saveLocalUrl() {
+  const url   = document.getElementById('localUrlInput')?.value.trim();
+  const model = document.getElementById('localModelInput')?.value.trim();
+  if (url)   apiKeys.gemma_local_url   = url;
+  if (model) apiKeys.gemma_local_model = model;
+  saveApiKeys();
+  showKeyFeedback('✓ Config saved');
+  pingLocalProvider('gemma_local').then(updateApiKeyUI);
+}
+
+function clearApiKey() {
+  if (!confirm('Remove Claude API key?')) return;
+  apiKeys.claude = '';
+  saveApiKeys();
+  updateApiKeyUI();
+}
+
+function updateApiKeyUI() {
+  const card   = document.getElementById('claudeKeyCard');
+  const status = document.getElementById('claudeKeyStatus');
+  const clear  = document.getElementById('claudeKeyClear');
+  if (!card) return;
+
+  const cloudProviders = ['claude','groq','gemini','openai'];
+  const cloudCount  = cloudProviders.filter(k => apiKeys[k]).length;
+  const hasLocal    = localProviderStatus['gemma_local'] === true;
+  const anyAvail    = cloudCount > 0 || hasLocal;
+
+  card.classList.toggle('has-key', anyAvail);
+
+  if (status) {
+    const parts = [];
+    if (apiKeys.claude)  parts.push('Claude');
+    if (apiKeys.gemini)  parts.push('Gemini');
+    if (apiKeys.groq)    parts.push('Groq');
+    if (apiKeys.openai)  parts.push('OpenAI');
+    if (hasLocal)        parts.push('Local 📱');
+    if (parts.length) {
+      status.textContent = `✓ ${parts.join(' · ')}`;
+      status.className   = 'api-key-status set';
+    } else {
+      status.textContent = 'Not set';
+      status.className   = 'api-key-status unset';
+    }
+  }
+  if (clear) clear.style.display = apiKeys.claude ? 'inline-block' : 'none';
+
+  // Local status indicator
+  const localStatus = document.getElementById('localProviderStatus');
+  if (localStatus) {
+    const ok = localProviderStatus['gemma_local'];
+    localStatus.textContent = ok===true  ? '✓ Gemma 4 local is running'
+                            : ok===false ? '✗ Not reachable — start Ollama or AI Edge Gallery'
+                            :              'Not tested yet — tap Test connection';
+    localStatus.style.color = ok===true ? 'var(--green)' : ok===false ? 'var(--coral)' : 'var(--text3)';
+  }
+}
+
+function showKeyFeedback(msg) {
+  const btn = document.querySelector('.api-key-save');
+  if (!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = msg;
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+let dirHandle  = null;  // FSA directory handle
+let fileHandle = null;  // compat alias — not used directly
+let saveTimer  = null;
+let isSaving   = false;
+
+
+// ── Storage ───────────────────────────────────────────
+function load() {
+  Object.keys(KEYS).forEach(k => {
+    if (k === 'onboarded') return;
+    try { const r = localStorage.getItem(KEYS[k]); if (r) state[k] = JSON.parse(r); } catch(_) {}
+  });
+}
+
+function save() {
+  Object.keys(KEYS).forEach(k => {
+    if (k === 'onboarded') return;
+    try { localStorage.setItem(KEYS[k], JSON.stringify(state[k])); } catch(_) {}
+  });
+  scheduleFileSave();
+}
+
+// ── File System ───────────────────────────────────────
+function scheduleFileSave() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(writeToFile, 800);
+}
+
+async function writeToFile() {
+  if (!dirHandle || isSaving) return;
+  isSaving = true;
+  setFileBar('saving', 'Saving...');
+  try {
+    const data     = JSON.stringify({exported:new Date().toISOString(), version:'1.0', ...state});
+    const jsonFH   = await dirHandle.getFileHandle('eduos-data.json', {create:true});
+    const writable = await jsonFH.createWritable();
+    await writable.write(data);
+    await writable.close();
+    setFileBar('linked', `🔗 ${dirHandle.name}`);
+  } catch(e) {
+    if (e.name==='NotAllowedError'||e.name==='SecurityError') {
+      dirHandle = null;
+      setFileBar('unlinked', 'Tap to relink folder');
+    }
+  }
+  isSaving = false;
+}
+
+// ── Save raw file into files/ subfolder (unencrypted) ─
+async function saveRawFile(id, base64, mimeType) {
+  if (!dirHandle) return null;
+  try {
+    const ext      = mimeType === 'application/pdf' ? 'pdf'
+                   : mimeType === 'image/png'        ? 'png'
+                   : mimeType === 'image/webp'       ? 'webp' : 'jpg';
+    const filesDir = await dirHandle.getDirectoryHandle('files', {create:true});
+    const fh       = await filesDir.getFileHandle(`${id}.${ext}`, {create:true});
+    const writable = await fh.createWritable();
+    const binary   = atob(base64);
+    const bytes    = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    await writable.write(bytes);
+    await writable.close();
+    return `files/${id}.${ext}`;
+  } catch(e) {
+    console.warn('[EduOS] Raw file save failed:', e.message);
+    return null;
+  }
+}
+
+// ── Open a stored raw file ────────────────────────────
+async function openRawFile(filePath) {
+  if (!dirHandle || !filePath) {
+    alert('Folder not linked — tap the status bar to relink your data folder first.');
+    return;
+  }
+  try {
+    const parts  = filePath.split('/');
+    const subDir = await dirHandle.getDirectoryHandle(parts[0]);
+    const fh     = await subDir.getFileHandle(parts[1]);
+    const file   = await fh.getFile();
+    const url    = URL.createObjectURL(file);
+    window.open(url, '_blank');
+  } catch(e) {
+    alert('Cannot open file — try relinking your folder.');
+  }
+}
+
+async function eduFsaLink() {
+  if (!FSA_SUPPORTED) { exportData(); return; }
+  try {
+    const lastName = localStorage.getItem(FILE_NAME_LS);
+    const handle   = await window.showDirectoryPicker({ mode:'readwrite' });
+
+    // Try to load eduos-data.json from it
+    try {
+      const jsonFH = await handle.getFileHandle('eduos-data.json');
+      const file   = await jsonFH.getFile();
+      const text   = await file.text();
+      if (text.trim()) {
+        const loaded = JSON.parse(text);
+        Object.keys(state).forEach(k => { if (loaded[k] !== undefined) state[k] = loaded[k]; });
+        Object.keys(KEYS).forEach(k => {
+          if (k==='onboarded') return;
+          try { localStorage.setItem(KEYS[k], JSON.stringify(state[k])); } catch(_){}
+        });
+        refreshHome();
+      }
+    } catch(_) {} // no existing file — fresh folder, that's fine
+
+    dirHandle = handle;
+    localStorage.setItem(FILE_NAME_LS, handle.name);
+    await writeToFile();
+    updateSettingsFileRow();
+  } catch(e) {
+    if (e.name!=='AbortError') setFileBar('unlinked', 'Link failed — tap to retry');
+  }
+}
+
+function setFileBar(st, text) {
+  const bar = document.getElementById('eduFileBar');
+  const label = document.getElementById('eduFileBarText');
+  bar.className = '';
+  bar.classList.add(st);
+  label.textContent = text;
+}
+
+function updateSettingsFileRow() {
+  const label = document.getElementById('settingsFileLabel');
+  const sub   = document.getElementById('settingsFileSub');
+  if (!label) return;
+  if (dirHandle) {
+    label.textContent = `🔗 ${dirHandle.name}`;
+    label.style.color = 'var(--green)';
+    sub.textContent = 'Auto-saving every change — folder contains data + original files';
+  } else {
+    label.textContent = 'No folder linked';
+    label.style.color = '';
+    sub.textContent = 'Tap to choose a folder in Google Drive — saves data + photos & PDFs';
+  }
+}
+
+// ── Import from JSON ──────────────────────────────────
+function importData(input) {
+  const file = input.files[0]; if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const loaded = JSON.parse(ev.target.result);
+      let merged = 0;
+      Object.keys(state).forEach(k => {
+        if (!loaded[k]) return;
+        if (Array.isArray(state[k]) && Array.isArray(loaded[k])) {
+          const ids = new Set(state[k].map(x=>x.id));
+          const newItems = loaded[k].filter(x=>!ids.has(x.id));
+          state[k] = [...state[k], ...newItems].sort((a,b)=>new Date(b.date||0)-new Date(a.date||0));
+          merged += newItems.length;
+        } else if (typeof loaded[k]==='object') {
+          Object.assign(state[k], loaded[k]);
+        }
+      });
+      save();
+      refreshHome();
+      alert(`✓ Imported ${merged} new entries from backup.`);
+    } catch(e) {
+      alert('Could not read file. Make sure it\'s a valid EduOS backup.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function getContext() {
+  return `Student: ${state.context.name||'Student'}, Class ${state.context.grade||4}, CBSE board.
+Favourite subject: ${state.context.favSubject||'not set'}. Finds hardest: ${state.context.hardSubject||'not set'}.
+Interests: ${state.context.interests||'not set'}.
+Subjects: Mathematics, English, Science/EVS, Social Studies, Hindi, Telugu, Computer Science.
+Languages: English, Hindi, Telugu.
+Explanation style: warm, fun, simple words, Grade 4 level, use everyday analogies.`;
+}
+
+// ═══════════════════════════════════════════════════
+// ONBOARDING
+// ═══════════════════════════════════════════════════
+const ONBOARD_STEPS = [
+  {emoji:'👋',q:"Hi! What's your name?",           sub:'This is your own learning space',     type:'input',   placeholder:'Type your name...',  key:'name'},
+  {emoji:'🏫',q:'Which class are you in?',          sub:'So I know what to help you with',     type:'options', options:['Class 3','Class 4','Class 5','Class 6'], key:'grade'},
+  {emoji:'⭐',q:"What's your favourite subject?",   sub:'Everyone has one!',                   type:'options', options:['Mathematics','English','Science','Social Studies','Hindi','Telugu','Computer Science'], key:'favSubject'},
+  {emoji:'🤔',q:'What do you find hardest?',        sub:"That's what we'll work on together",  type:'options', options:['Mathematics','English','Science','Social Studies','Hindi','Telugu','Computer Science'], key:'hardSubject'},
+  {emoji:'🚀',q:"What are you curious about?",      sub:'Outside of school too!',               type:'input',   placeholder:'Animals, space, games...', key:'interests'},
+];
+let onboardStep = 0, onboardAnswers = {};
+
+function startOnboard() {
+  document.getElementById('onboarding').classList.add('show');
+  renderOnboard();
+}
+
+function renderOnboard() {
+  const s = ONBOARD_STEPS[onboardStep];
+  document.getElementById('onboardEmoji').textContent = s.emoji;
+  document.getElementById('onboardQ').textContent = s.q;
+  document.getElementById('onboardSub').textContent = s.sub;
+  document.getElementById('onboardProgress').innerHTML =
+    ONBOARD_STEPS.map((_,i) => `<div class="onboard-dot ${i<=onboardStep?'done':''}"></div>`).join('');
+  const inp = document.getElementById('onboardInput');
+  const opts = document.getElementById('onboardOptions');
+  if (s.type === 'input') {
+    inp.style.display = 'block'; inp.placeholder = s.placeholder;
+    inp.value = onboardAnswers[s.key]||''; opts.innerHTML = '';
+    setTimeout(() => inp.focus(), 100);
+  } else {
+    inp.style.display = 'none';
+    opts.innerHTML = s.options.map(o =>
+      `<div class="onboard-option ${onboardAnswers[s.key]===o?'selected':''}" onclick="selectOpt(this,'${s.key}','${o}')">${o}</div>`
+    ).join('');
+  }
+  document.getElementById('onboardNext').textContent = onboardStep === ONBOARD_STEPS.length-1 ? "Let's go! 🚀" : 'Next →';
+}
+
+function selectOpt(el, key, val) {
+  document.querySelectorAll('.onboard-option').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected'); onboardAnswers[key] = val;
+}
+
+function nextOnboard() {
+  const s = ONBOARD_STEPS[onboardStep];
+  if (s.type === 'input') onboardAnswers[s.key] = document.getElementById('onboardInput').value.trim();
+  if (!onboardAnswers[s.key]) return;
+  if (onboardStep < ONBOARD_STEPS.length-1) { onboardStep++; renderOnboard(); }
+  else {
+    state.context = {...state.context, ...onboardAnswers};
+    save(); localStorage.setItem(KEYS.onboarded,'1');
+    document.getElementById('onboarding').classList.remove('show');
+    refreshHome(); loadSettings();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════
+function navTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('screen-'+screen).classList.add('active');
+  const nav = document.getElementById('nav-'+screen);
+  if (nav) nav.classList.add('active');
+  const fns = {home:refreshHome, subjects:renderSubjects, curiosity:renderCuriosities,
+    explain:renderSavedExplanations, review:refreshReview, settings:loadSettings,
+    journal:renderJournalEntries, files:renderSavedFiles, vocab:renderVocab};
+  if (fns[screen]) fns[screen]();
+}
+
+// ═══════════════════════════════════════════════════
+// HOME
+// ═══════════════════════════════════════════════════
+function refreshHome() {
+  const name = state.context.name || 'there';
+  const h = new Date().getHours();
+  const greet = h<12?`Good morning, ${name}! ☀️`:h<17?`Hello, ${name}! 👋`:`Good evening, ${name}! 🌙`;
+  document.getElementById('heroGreeting').textContent = greet;
+  document.getElementById('heroDate').textContent =
+    new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'});
+  const days = new Set([...state.topics,...state.journals,...state.files].map(t=>new Date(t.date).toDateString())).size;
+  document.getElementById('streakPill').textContent = `🔥 ${days} day${days!==1?'s':''} of learning`;
+
+  document.getElementById('subjectChips').innerHTML = SUBJECTS.map(s =>
+    `<div class="subject-chip" onclick="navTo('subjects')">${s.icon} ${s.name}</div>`
+  ).join('');
+
+  document.getElementById('journalStat').textContent  = state.journals.length  ? `${state.journals.length} entries` : 'Tell me about today';
+  document.getElementById('filesStat').textContent    = state.files.length     ? `${state.files.length} saved`       : 'Photos & notes';
+  document.getElementById('curiosityStat').textContent= state.curiosities.length? `${state.curiosities.length} questions` : 'Ask anything';
+  document.getElementById('explainStat').textContent  = state.explanations.length? `${state.explanations.length} saved` : 'Get help understanding';
+  document.getElementById('vocabStat').textContent    = state.vocab.length ? `${state.vocab.length} words · ${state.vocab.filter(v=>v.status==='mastered').length} mastered` : 'Words from your files';
+
+  renderTestAlerts();
+  buildInsights();
+}
+
+function buildInsights() {
+  const strip = document.getElementById('insightCard');
+  const items = [];
+  if (state.journals.length) {
+    const j = state.journals[0];
+    if (j.analysis?.mood) items.push({dot:'dot-purple', text:`<strong>Yesterday's mood:</strong> ${j.analysis.mood}`});
+  }
+  if (state.topics.length) {
+    const t = state.topics[0];
+    items.push({dot:'dot-teal', text:`<strong>Last studied:</strong> ${t.topic} in ${t.subject}`});
+  }
+  if (state.files.length) {
+    items.push({dot:'dot-green', text:`<strong>${state.files.length} school file${state.files.length!==1?'s':''}</strong> saved and analysed`});
+  }
+  if (state.curiosities.length) {
+    items.push({dot:'dot-coral', text:`<strong>Latest question:</strong> "${state.curiosities[0].question.slice(0,60)}…"`});
+  }
+  if (!items.length) items.push({dot:'dot-teal', text:'Start logging your learning — your insights will appear here!'});
+  strip.innerHTML = items.map(i =>
+    `<div class="insight-row"><div class="insight-dot ${i.dot}"></div><div class="insight-text">${i.text}</div></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// VOICE JOURNAL
+// ═══════════════════════════════════════════════════
+let recognition = null;
+let isRecording = false;
+let recordTimer = null;
+let recordSeconds = 0;
+let currentTranscript = '';
+let selectedLang = 'en-IN';
+let pendingAnalysis = null;
+
+function setLang(el, lang) {
+  document.querySelectorAll('.lang-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  selectedLang = lang;
+}
+
+function toggleRecording() {
+  if (isRecording) stopRecording(); else startRecording();
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) {
+    alert('Voice recording is not supported in this browser. Please use Chrome on Android. You can type your journal below instead!');
+    return;
+  }
+
+  recognition = new SR();
+  recognition.lang = selectedLang;
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  // Show existing text + new speech
+  let finalText = document.getElementById('transcriptEdit').value || '';
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+      else interim = e.results[i][0].transcript;
+    }
+    showTranscript(finalText + interim);
+    currentTranscript = finalText;
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error !== 'no-speech') stopRecording();
+  };
+
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+
+  recognition.start();
+  isRecording = true;
+
+  const btn = document.getElementById('recordBtn');
+  btn.classList.add('recording');
+  btn.textContent = '⏹️';
+
+  recordSeconds = 0;
+  recordTimer = setInterval(() => {
+    recordSeconds++;
+    const m = Math.floor(recordSeconds/60).toString().padStart(2,'0');
+    const s = (recordSeconds%60).toString().padStart(2,'0');
+    document.getElementById('recordTimer').textContent = `Recording ${m}:${s} — tap to stop`;
+  }, 1000);
+}
+
+function stopRecording() {
+  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
+  isRecording = false;
+  clearInterval(recordTimer);
+  const btn = document.getElementById('recordBtn');
+  btn.classList.remove('recording');
+  btn.textContent = '🎙️';
+  document.getElementById('recordTimer').textContent = 'Recording complete — now tap Analyse!';
+  if (currentTranscript.trim()) {
+    document.getElementById('transcriptEdit').value = currentTranscript;
+    showTranscript(currentTranscript);
+    document.getElementById('analyseBtn').disabled = false;
+  }
+}
+
+function showTranscript(text) {
+  const box  = document.getElementById('transcriptBox');
+  const ph   = document.getElementById('transcriptPlaceholder');
+  const edit = document.getElementById('transcriptEdit');
+  ph.style.display = 'none';
+  edit.style.display = 'block';
+  edit.value = text;
+  box.classList.add('active');
+  document.getElementById('analyseBtn').disabled = !text.trim();
+}
+
+function onTranscriptEdit() {
+  const text = document.getElementById('transcriptEdit').value;
+  currentTranscript = text;
+  document.getElementById('transcriptPlaceholder').style.display = text ? 'none' : 'block';
+  document.getElementById('analyseBtn').disabled = !text.trim();
+}
+
+// Make transcript box tappable to type
+document.getElementById('transcriptBox').addEventListener('click', () => {
+  const edit = document.getElementById('transcriptEdit');
+  document.getElementById('transcriptPlaceholder').style.display = 'none';
+  edit.style.display = 'block';
+  edit.focus();
+});
+
+function clearJournal() {
+  currentTranscript = '';
+  document.getElementById('transcriptEdit').value = '';
+  document.getElementById('transcriptEdit').style.display = 'none';
+  document.getElementById('transcriptPlaceholder').style.display = 'block';
+  document.getElementById('transcriptBox').classList.remove('active');
+  document.getElementById('recordTimer').textContent = '';
+  document.getElementById('analyseBtn').disabled = true;
+  document.getElementById('analysisResult').innerHTML = '';
+  document.getElementById('saveJournalBtn').style.display = 'none';
+  pendingAnalysis = null;
+}
+
+async function analyseJournal() {
+  const journalText = document.getElementById('transcriptEdit').value.trim();
+  if (!journalText) return;
+
+  const btn = document.getElementById('analyseBtn');
+  btn.disabled = true; btn.textContent = '✨ Analysing...';
+
+  const result = document.getElementById('analysisResult');
+  result.innerHTML = '';
+  document.getElementById('saveJournalBtn').style.display = 'none';
+
+  try {
+    const prompt = `You are analysing a Grade 4 student's voice journal entry about their school day.
+
+${getContext()}
+
+Journal entry:
+"${journalText}"
+
+Extract structured insights. Reply ONLY in JSON (no markdown):
+{
+  "mood": "one emoji + one word describing overall mood (e.g. '😊 happy')",
+  "energy": "high | medium | low",
+  "highlights": ["list of positive things that happened or were learned"],
+  "topics_covered": [
+    {"subject": "subject name from: Mathematics/English/Science EVS/Social Studies/Hindi/Telugu/Computer Science", "topic": "specific topic", "understood": "yes|partially|no", "emotion": "excited|neutral|confused|bored"}
+  ],
+  "confused_about": ["things mentioned as confusing or hard"],
+  "action_items": ["e.g. 'Test on Thursday in Science'", "homework mentioned"],
+  "social_notes": "brief note on friendships/social events if mentioned (keep positive/neutral tone)",
+  "interesting_quote": "most interesting or insightful thing said, verbatim from their words",
+  "parent_summary": "2-sentence summary for parents — warm, factual, focuses on learning and wellbeing"
+}`;
+
+    const raw  = await callClaude(prompt, {maxTokens:1000});
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    const a = match ? JSON.parse(match[0]) : {};
+
+    pendingAnalysis = { transcript: journalText, analysis: a, date: new Date().toISOString() };
+    renderAnalysis(a);
+    document.getElementById('saveJournalBtn').style.display = 'block';
+
+    // Auto-add topics to subject tracker
+    if (a.topics_covered?.length) {
+      a.topics_covered.forEach(t => {
+        if (t.subject && t.topic) {
+          state.topics.unshift({
+            id:'top_'+Date.now()+'_'+Math.random(),
+            date: new Date().toISOString(),
+            subject: t.subject,
+            topic: t.topic,
+            understood: t.understood||'yes',
+            loggedBy:'voice_journal'
+          });
+        }
+      });
+      save();
+    }
+
+  } catch(err) {
+    result.innerHTML = `<div style="color:var(--coral);padding:12px 0;font-size:13px">Error: ${err.message}</div>`;
+  }
+
+  btn.disabled = false; btn.textContent = '✨ Analyse my day';
+}
+
+function renderAnalysis(a) {
+  const result = document.getElementById('analysisResult');
+  const topicHTML = (a.topics_covered||[]).map(t => {
+    const cls = t.understood==='yes'?'tag-understood':t.understood==='partially'?'tag-partial':'tag-confused';
+    const em = t.emotion==='excited'?'🔥':t.emotion==='confused'?'🤔':t.emotion==='bored'?'😴':'📖';
+    return `<span class="topic-tag ${cls}">${em} ${t.subject}: ${t.topic}</span>`;
+  }).join('');
+
+  const actionsHTML = (a.action_items||[]).map(item =>
+    `<div class="action-item"><div class="action-icon">📌</div><div class="action-text">${item}</div></div>`
+  ).join('');
+
+  const confusedHTML = (a.confused_about||[]).map(c =>
+    `<div class="action-item"><div class="action-icon">🤔</div><div class="action-text">${c}</div></div>`
+  ).join('');
+
+  result.innerHTML = `
+    <div class="analysis-card">
+      <div class="analysis-head">
+        <span style="font-size:20px">${a.mood?.split(' ')[0]||'📖'}</span>
+        <span class="analysis-head-title">Today's analysis</span>
+      </div>
+      <div class="analysis-body">
+        <div class="analysis-section">
+          <div class="analysis-label">Mood & Energy</div>
+          <div class="mood-bar">
+            <div class="mood-emoji">${a.mood?.split(' ')[0]||'😊'}</div>
+            <div class="mood-label">${a.mood?.split(' ').slice(1).join(' ')||'okay'} · Energy: ${a.energy||'medium'}</div>
+          </div>
+        </div>
+        ${topicHTML ? `
+        <div class="analysis-section">
+          <div class="analysis-label">Topics covered</div>
+          <div class="tag-row">${topicHTML}</div>
+        </div>` : ''}
+        ${confusedHTML ? `
+        <div class="analysis-section">
+          <div class="analysis-label">Needs attention</div>
+          ${confusedHTML}
+        </div>` : ''}
+        ${actionsHTML ? `
+        <div class="analysis-section">
+          <div class="analysis-label">Action items</div>
+          ${actionsHTML}
+        </div>` : ''}
+        ${a.interesting_quote ? `
+        <div class="analysis-section">
+          <div class="analysis-label">Her words</div>
+          <div style="font-size:13px;color:var(--purple);font-style:italic;line-height:1.5">"${a.interesting_quote}"</div>
+        </div>` : ''}
+        ${a.parent_summary ? `
+        <div class="analysis-section" style="background:var(--teal-dim2);padding:10px 12px;border-radius:var(--radius-sm);border-left:3px solid var(--teal)">
+          <div class="analysis-label">Parent summary</div>
+          <div style="font-size:13px;color:var(--text2);line-height:1.6">${a.parent_summary}</div>
+        </div>` : ''}
+      </div>
+    </div>`;
+}
+
+function saveJournal() {
+  if (!pendingAnalysis) return;
+  state.journals.unshift(pendingAnalysis);
+  save();
+  clearJournal();
+  renderJournalEntries();
+  refreshHome();
+  const btn = document.getElementById('saveJournalBtn');
+  btn.textContent = '✓ Saved!';
+  setTimeout(() => { btn.textContent = '💾 Save to my journal'; btn.style.display='none'; }, 1500);
+}
+
+function renderJournalEntries() {
+  const el = document.getElementById('journalEntries');
+  if (!state.journals.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0">No journal entries yet — record your first day!</div>`;
+    return;
+  }
+  el.innerHTML = state.journals.slice(0,10).map(j => {
+    const d = new Date(j.date);
+    const dateStr = d.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'});
+    const a = j.analysis||{};
+    const topics = (a.topics_covered||[]).map(t=>t.subject).filter((v,i,arr)=>arr.indexOf(v)===i);
+    return `<div class="journal-entry">
+      <div class="journal-entry-head">
+        <span class="journal-mood">${a.mood?.split(' ')[0]||'📖'}</span>
+        <span class="journal-date">${dateStr} · ${a.energy||'medium'} energy</span>
+      </div>
+      <div class="journal-preview">${a.parent_summary||j.transcript?.slice(0,100)||'Journal entry'}</div>
+      ${topics.length ? `<div class="journal-tags">${topics.map(t=>`<span class="journal-tag">${t}</span>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// SCHOOL FILES
+// ═══════════════════════════════════════════════════
+async function handleFileUpload(input, type) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+
+  const proc = document.getElementById('fileProcessing');
+  const result = document.getElementById('fileResult');
+  proc.innerHTML = `<div class="processing-card"><div class="processing-icon">🔍</div><div class="processing-text">Claude is reading your ${type === 'pdf' ? 'PDF' : 'photo'}...<br><small>Extracting topics, vocabulary and homework</small></div></div>`;
+  result.innerHTML = '';
+
+  try {
+    // Read file as base64
+    const base64 = await new Promise((res, rej) => {
+      const reader = new FileReader();
+      reader.onload = () => res(reader.result.split(',')[1]);
+      reader.onerror = rej;
+      reader.readAsDataURL(file);
+    });
+
+    const isPDF  = file.type === 'application/pdf';
+    const media  = isPDF ? 'application/pdf' : file.type || 'image/jpeg';
+
+    const msgContent = [
+      {
+        type: isPDF ? 'document' : 'image',
+        source: { type:'base64', media_type: media, data: base64 }
+      },
+      {
+        type: 'text',
+        text: `This is a school document for a Grade 4 student (CBSE board). ${getContext()}
+
+Please analyse this document and reply ONLY in JSON (no markdown):
+{
+  "document_type": "worksheet | notes | question_paper | handout | textbook_page | other",
+  "subject": "best match from: Mathematics / English / Science EVS / Social Studies / Hindi / Telugu / Computer Science / Unknown",
+  "topics": ["list of topics or concepts covered"],
+  "vocabulary": ["new or important words/terms found"],
+  "homework": ["any homework, exercises or tasks mentioned"],
+  "test_date": "if any test date is mentioned, state it, otherwise null",
+  "key_concepts": ["2-3 main concepts a student should remember from this"],
+  "summary": "2-3 sentence friendly summary of what this document is about, written for a Grade 4 student",
+  "parent_note": "1 sentence for parents about what was covered"
+}`
+      }
+    ];
+
+    const raw  = await callClaude('', {images: msgContent, maxTokens:1000});
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const match = clean.match(/\{[\s\S]*\}/);
+    const extracted = match ? JSON.parse(match[0]) : {};
+
+    proc.innerHTML = '';
+    renderFileResult(file.name, type, extracted, base64, media);
+
+  } catch(err) {
+    proc.innerHTML = '';
+    result.innerHTML = `<div style="color:var(--coral);font-size:13px;padding:12px 0">Error: ${err.message}</div>`;
+  }
+}
+
+function renderFileResult(name, type, ex, base64, media) {
+  const result = document.getElementById('fileResult');
+  const icon = type==='pdf'?'📋':type==='photo'?'📷':'🖼️';
+
+  window._pendingFile = { name, type, extracted:ex, base64, media, date:new Date().toISOString() };
+
+  const topicsHTML = (ex.topics||[]).map(t=>`<span class="topic-tag tag-understood" style="margin:2px">${t}</span>`).join('');
+  const vocabHTML  = (ex.vocabulary||[]).map(v=>`<span class="topic-tag tag-partial" style="margin:2px">${v}</span>`).join('');
+  const hwHTML     = (ex.homework||[]).map(h=>`<div class="action-item"><div class="action-icon">📌</div><div class="action-text">${h}</div></div>`).join('');
+
+  result.innerHTML = `
+    <div class="file-card">
+      <div class="file-card-head">
+        <div class="file-thumb">${icon}</div>
+        <div class="file-info">
+          <div class="file-name">${name.slice(0,40)}</div>
+          <div class="file-meta">${ex.subject||'Unknown subject'} · ${ex.document_type||'Document'}</div>
+        </div>
+      </div>
+      <div class="file-body">
+        ${ex.summary ? `
+        <div class="file-section">
+          <div class="file-section-label">What's in here</div>
+          <div class="file-section-text">${ex.summary}</div>
+        </div>` : ''}
+        ${topicsHTML ? `
+        <div class="file-section">
+          <div class="file-section-label">Topics covered</div>
+          <div class="tag-row" style="margin-top:4px">${topicsHTML}</div>
+        </div>` : ''}
+        ${vocabHTML ? `
+        <div class="file-section">
+          <div class="file-section-label">New vocabulary</div>
+          <div class="tag-row" style="margin-top:4px">${vocabHTML}</div>
+        </div>` : ''}
+        ${hwHTML ? `
+        <div class="file-section">
+          <div class="file-section-label">Homework / tasks</div>
+          ${hwHTML}
+        </div>` : ''}
+        ${ex.test_date ? `
+        <div class="file-section" style="background:var(--coral-dim);padding:10px 12px;border-radius:var(--radius-sm);border-left:3px solid var(--coral)">
+          <div class="file-section-label">Test date mentioned</div>
+          <div class="file-section-text" style="color:var(--coral);font-weight:700">${ex.test_date}</div>
+        </div>` : ''}
+        ${ex.parent_note ? `
+        <div class="file-section" style="background:var(--teal-dim2);padding:10px 12px;border-radius:var(--radius-sm)">
+          <div class="file-section-label">Parent note</div>
+          <div class="file-section-text">${ex.parent_note}</div>
+        </div>` : ''}
+        <button class="file-save-btn" onclick="saveFile()">💾 Save to my files</button>
+      </div>
+    </div>`;
+}
+
+function saveFile() {
+  if (!window._pendingFile) return;
+  const pf    = window._pendingFile;
+  const entry = {
+    id:        'file_'+Date.now(),
+    name:      pf.name,
+    type:      pf.type,
+    date:      pf.date,
+    extracted: pf.extracted,
+    filePath:  null   // filled in async below if folder is linked
+  };
+  state.files.unshift(entry);
+
+  // Save raw file to folder (non-blocking — UI stays snappy)
+  if (pf.base64 && pf.media) {
+    saveRawFile(entry.id, pf.base64, pf.media).then(path => {
+      if (path) {
+        const idx = state.files.findIndex(f => f.id === entry.id);
+        if (idx !== -1) { state.files[idx].filePath = path; save(); }
+      }
+    });
+  }
+
+  // Auto-add topics
+  const ex = entry.extracted;
+  if (ex.subject && ex.topics?.length) {
+    ex.topics.forEach(t => {
+      state.topics.unshift({
+        id:'top_'+Date.now()+'_'+Math.random(),
+        date: entry.date,
+        subject: ex.subject,
+        topic: t,
+        understood: 'yes',
+        loggedBy: 'school_file'
+      });
+    });
+  }
+
+  save();
+  if (entry.extracted) ingestVocabFromFile(entry.extracted);
+  window._pendingFile = null;
+  document.getElementById('fileResult').innerHTML = '';
+  renderSavedFiles();
+  refreshHome();
+
+  const btn = event.target;
+  btn.textContent = '✓ Saved!';
+  setTimeout(() => { btn.textContent = '💾 Save to my files'; }, 1500);
+}
+
+function renderSavedFiles() {
+  const el = document.getElementById('savedFilesList');
+  if (!state.files.length) {
+    el.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:12px 0">No files saved yet — take a photo of a worksheet to start!</div>`;
+    return;
+  }
+  el.innerHTML = state.files.slice(0,20).map(f => {
+    const icon = f.type==='pdf'?'📋':f.type==='photo'?'📷':'🖼️';
+    const d    = new Date(f.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const ex   = f.extracted||{};
+    return `<div class="saved-file-row">
+      <div class="saved-file-icon">${icon}</div>
+      <div class="saved-file-info">
+        <div class="saved-file-name">${ex.subject||'Document'} · ${ex.document_type||f.type}</div>
+        <div class="saved-file-meta">${d} · ${(ex.topics||[]).slice(0,2).join(', ')||f.name.slice(0,30)}</div>
+      </div>
+      ${f.filePath ? `<button onclick="openRawFile('${f.filePath}')" style="background:none;border:1px solid var(--border);color:var(--text3);border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0">📂 Open</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// SUBJECTS
+// ═══════════════════════════════════════════════════
+function renderSubjects() {
+  const list = document.getElementById('subjectList');
+  list.innerHTML = SUBJECTS.map(s => {
+    const entries = state.topics.filter(t => t.subject===s.name);
+    const recent  = entries[0];
+    const partial = entries.filter(t=>t.understood==='partially').length;
+    const notYet  = entries.filter(t=>t.understood==='no').length;
+    let statusClass='status-new', statusText='Not started';
+    if (entries.length) {
+      if (notYet>0)        { statusClass='status-help';  statusText='Needs help'; }
+      else if (partial>0)  { statusClass='status-watch'; statusText='Almost there'; }
+      else                 { statusClass='status-good';  statusText='Going well!'; }
+    }
+    return `<div class="subject-row" onclick="openSheet('topic','${s.name}')">
+      <div class="subject-icon">${s.icon}</div>
+      <div class="subject-info">
+        <div class="subject-name">${s.name}</div>
+        <div class="subject-topics">${recent?`Last: ${recent.topic} (via ${recent.loggedBy||'manual'})`:'Tap to log a topic'}</div>
+      </div>
+      <div class="subject-status ${statusClass}">${statusText}</div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// CURIOSITY
+// ═══════════════════════════════════════════════════
+function renderCuriosities() {
+  const list = document.getElementById('curiosityList');
+  if (!state.curiosities.length) {
+    list.innerHTML = `<div class="curiosity-empty"><div class="curiosity-empty-icon">🤔</div><div style="font-size:14px;line-height:1.6">When you wonder about something,<br>tap <strong>Ask</strong> and type your question!</div></div>`;
+    return;
+  }
+  list.innerHTML = state.curiosities.map(c => {
+    const d = new Date(c.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    return `<div class="curiosity-item" id="cur_${c.id}" onclick="toggleCuriosity('${c.id}')">
+      <div class="curiosity-head">
+        <span style="font-size:20px">🌟</span>
+        <div class="curiosity-q">${c.question}</div>
+        <div class="curiosity-date">${d}</div>
+      </div>
+      <div class="curiosity-body">
+        ${c.explanation?`<div class="curiosity-section"><div class="curiosity-section-label">The answer</div><div class="curiosity-section-text">${c.explanation}</div></div>`:''}
+        ${c.followUp?`<div class="curiosity-section"><div class="curiosity-section-label">Did you know?</div><div class="curiosity-section-text">${c.followUp}</div></div>`:''}
+        ${c.activity?`<div class="curiosity-activity">🎯 <strong>Try this:</strong> ${c.activity}</div>`:''}
+        ${c.questionBack?`<div class="curiosity-section"><div class="curiosity-section-label">Think about this</div><div class="curiosity-section-text" style="color:var(--purple);font-weight:600">${c.questionBack}</div></div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCuriosity(id) { document.getElementById('cur_'+id)?.classList.toggle('expanded'); }
+
+async function expandCuriosity(question) {
+  const entry = {id:'cur_'+Date.now(), date:new Date().toISOString(), question, explanation:'', followUp:'', activity:'', questionBack:''};
+  state.curiosities.unshift(entry); save(); renderCuriosities();
+  const el = document.getElementById('cur_'+entry.id);
+  if (el) { el.classList.add('expanded'); el.querySelector('.curiosity-body').innerHTML = '<div style="color:var(--text3);font-size:13px;padding:12px 0">✨ Claude is thinking...</div>'; }
+
+  try {
+    const curiousPrompt = `${getContext()}\nStudent is curious about: "${question}"\n\nReply ONLY in JSON:\n{"explanation":"2-3 sentences, Grade 4 level, fun and simple","followUp":"one surprising fact","activity":"one home activity or null","questionBack":"one Socratic question to deepen thinking"}`;
+    const text = await callClaude(curiousPrompt, {maxTokens:800});
+    const match = text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const parsed = match ? JSON.parse(match[0]) : {};
+    const idx = state.curiosities.findIndex(c=>c.id===entry.id);
+    if (idx !== -1) { state.curiosities[idx] = {...entry,...parsed}; save(); }
+    renderCuriosities();
+    document.getElementById('cur_'+entry.id)?.classList.add('expanded');
+  } catch(err) {
+    const idx = state.curiosities.findIndex(c=>c.id===entry.id);
+    if (idx !== -1) { state.curiosities[idx].explanation = 'Could not load — try again!'; save(); }
+    renderCuriosities();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// EXPLANATIONS
+// ═══════════════════════════════════════════════════
+async function getExplanation() {
+  const topic = document.getElementById('explainTopic').value.trim();
+  if (!topic) return;
+  const btn = document.getElementById('explainBtn');
+  const results = document.getElementById('explanationResults');
+  btn.disabled=true; btn.textContent='...';
+  results.innerHTML='<div style="color:var(--text3);font-size:13px;padding:16px 0;text-align:center">✨ Creating 3 explanations just for you...</div>';
+  try {
+    const text = await callClaude(`${getContext()}\nExplain for Grade 4: "${topic}"\n\nReply ONLY in JSON:\n{"explanations":[{"type":"Story","emoji":"📖","text":"via short story, 2-3 sentences"},{"type":"Analogy","emoji":"🎯","text":"via familiar daily life comparison, 2-3 sentences"},{"type":"Activity","emoji":"🎨","text":"via home activity or observation, 2-3 sentences"}]}`, {maxTokens:1200});
+    const match = text.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const parsed = match ? JSON.parse(match[0]) : {explanations:[]};
+    results.innerHTML = (parsed.explanations||[]).map((e,i) => `
+      <div class="explain-card">
+        <div class="explain-card-head"><span style="font-size:20px">${e.emoji}</span><span class="explain-card-type">${e.type}</span></div>
+        <div class="explain-card-body">${e.text}
+          <br><button class="explain-save-btn" onclick="saveExplanation('${topic.replace(/'/g,"\\'")}','${e.type}','${e.emoji}',${i})">⭐ This one helped!</button>
+        </div>
+      </div>`).join('');
+    window._lastExplanations = {topic, list: parsed.explanations||[]};
+  } catch(err) {
+    results.innerHTML = `<div style="color:var(--coral);font-size:13px;padding:16px 0">Oops! ${err.message}</div>`;
+  }
+  btn.disabled=false; btn.textContent='Go!';
+}
+
+function saveExplanation(topic, type, emoji, idx) {
+  const data = window._lastExplanations;
+  if (!data||!data.list[idx]) return;
+  state.explanations.unshift({id:'exp_'+Date.now(), date:new Date().toISOString(), topic, type, emoji, text:data.list[idx].text, clicked:true});
+  save(); renderSavedExplanations();
+  const btn = event.target;
+  btn.textContent='✓ Saved!'; btn.style.background='var(--green-dim)'; btn.style.color='var(--green)';
+}
+
+function renderSavedExplanations() {
+  const list = document.getElementById('savedList');
+  if (!state.explanations.length) {
+    list.innerHTML = `<div style="color:var(--text3);font-size:13px;padding:8px 0">When you find an explanation that helps, tap "This one helped!" to save it here.</div>`;
+    return;
+  }
+  list.innerHTML = state.explanations.slice(0,10).map(e =>
+    `<div class="saved-item"><div class="saved-item-topic">${e.emoji} ${e.topic} — ${e.type}</div><div class="saved-item-preview">${e.text}</div></div>`
+  ).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// REVIEW
+// ═══════════════════════════════════════════════════
+function refreshReview() {
+  document.getElementById('rTopics').textContent  = state.topics.length;
+  document.getElementById('rJournal').textContent = state.journals.length;
+  document.getElementById('rCurious').textContent = state.curiosities.length;
+  document.getElementById('rFiles').textContent   = state.files.length;
+  document.getElementById('reviewHeroTitle').textContent = `Hey ${state.context.name||'there'}! 🌟`;
+
+  const wins = document.getElementById('winsList');
+  const w = [];
+  if (state.topics.length>=3)       w.push({e:'📚',t:`Studied <strong>${state.topics.length} topics</strong> — great work!`});
+  if (state.journals.length>=1)     w.push({e:'🎙️',t:`Logged <strong>${state.journals.length} day${state.journals.length!==1?'s':''}</strong> in your voice journal`});
+  if (state.files.length>=1)        w.push({e:'📄',t:`Added <strong>${state.files.length} school file${state.files.length!==1?'s':''}</strong> to your knowledge base`});
+  if (state.curiosities.length>=1)  w.push({e:'🌟',t:`Asked <strong>${state.curiosities.length} question${state.curiosities.length!==1?'s':''}</strong> — curious minds learn best!`});
+  wins.innerHTML = w.length
+    ? w.map(x=>`<div class="win-item"><span class="win-emoji">${x.e}</span><div class="win-text">${x.t}</div></div>`).join('')
+    : `<div style="color:var(--text3);font-size:13px;text-align:center;padding:16px 0">Keep learning — your wins will appear here!</div>`;
+}
+
+async function generateReview() {
+  const btn = document.querySelector('.generate-btn');
+  btn.innerHTML = '⏳ Writing your review...'; btn.disabled=true;
+
+  const recentTopics   = state.topics.slice(0,10).map(t=>`${t.subject}: ${t.topic} (${t.understood})`).join('\n');
+  const recentJournals = state.journals.slice(0,3).map(j=>`Mood: ${j.analysis?.mood||'?'} | ${j.analysis?.parent_summary||''}`).join('\n');
+  const recentCurious  = state.curiosities.slice(0,5).map(c=>c.question).join('\n');
+  const recentFiles    = state.files.slice(0,5).map(f=>`${f.extracted?.subject}: ${(f.extracted?.topics||[]).join(', ')}`).join('\n');
+
+  try {
+    const text = await callClaude(`Write a warm weekly review for a Grade 4 student.
+${getContext()}
+Topics studied: ${recentTopics||'none'}
+Voice journal entries: ${recentJournals||'none'}
+Questions asked: ${recentCurious||'none'}
+School files added: ${recentFiles||'none'}
+Write 3 short, warm paragraphs directly to the student. Wins first. Age-appropriate, encouraging, fun. No bullet points.`, {maxTokens:600});
+    document.getElementById('reviewOutput').style.display='block';
+    document.getElementById('reviewText').innerHTML = text.replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+  } catch(err) {
+    document.getElementById('reviewOutput').style.display='block';
+    document.getElementById('reviewText').textContent = 'Error: '+err.message;
+  }
+  btn.innerHTML='✨ Generate my weekly review'; btn.disabled=false;
+}
+
+// ═══════════════════════════════════════════════════
+// CAPTURE SHEET
+// ═══════════════════════════════════════════════════
+let sheetMode='curious', sheetSubject='';
+
+const SHEET_CONFIGS = {
+  curious: {title:"What are you curious about? 🤔", types:[], placeholder:"What do you want to know about?"},
+  topic:   {title:"What did you study today? 📚",    types:['Understood ✓','Almost there','Need help'], placeholder:"Which topic did you cover?"},
+  note:    {title:"Type your notes 📝",              types:[], placeholder:"Paste or type your notes, text from class, anything..."}
+};
+
+function openSheet(mode, subject) {
+  sheetMode=mode||'curious'; sheetSubject=subject||'';
+  const cfg = SHEET_CONFIGS[sheetMode]||SHEET_CONFIGS.curious;
+  document.getElementById('sheetTitle').textContent    = cfg.title;
+  document.getElementById('sheetText').placeholder     = cfg.placeholder;
+  document.getElementById('sheetText').value           = '';
+  const typesEl = document.getElementById('sheetTypes');
+  typesEl.innerHTML = cfg.types.map((t,i)=>`<div class="sheet-type ${i===0?'selected':''}" onclick="selectSheetType(this)">${t}</div>`).join('');
+
+  const overlay=document.getElementById('sheetOverlay'), sheet=document.getElementById('captureSheet');
+  overlay.classList.add('open');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    overlay.classList.add('visible'); sheet.classList.add('open');
+    setTimeout(()=>document.getElementById('sheetText').focus(),320);
+  }));
+}
+
+function closeSheet() {
+  const overlay=document.getElementById('sheetOverlay'), sheet=document.getElementById('captureSheet');
+  overlay.classList.remove('visible'); sheet.classList.remove('open');
+  setTimeout(()=>{ overlay.classList.remove('open'); document.getElementById('sheetText').value=''; },320);
+}
+
+function selectSheetType(el) { document.querySelectorAll('.sheet-type').forEach(e=>e.classList.remove('selected')); el.classList.add('selected'); }
+
+function saveSheet() {
+  const text = document.getElementById('sheetText').value.trim();
+  if (!text) return;
+
+  if (sheetMode==='curious') {
+    closeSheet(); navTo('curiosity'); expandCuriosity(text);
+  } else if (sheetMode==='topic') {
+    const sel = document.querySelector('.sheet-type.selected');
+    const understood = sel?(sel.textContent.includes('✓')?'yes':sel.textContent.includes('Almost')?'partially':'no'):'yes';
+    state.topics.unshift({id:'top_'+Date.now(), date:new Date().toISOString(), subject:sheetSubject||SUBJECTS[0].name, topic:text, understood, loggedBy:'manual'});
+    save(); closeSheet(); renderSubjects(); refreshHome();
+  } else if (sheetMode==='note') {
+    // Process typed/pasted notes as a text file
+    closeSheet();
+    navTo('files');
+    processTextNote(text);
+  }
+}
+
+async function processTextNote(text) {
+  const proc = document.getElementById('fileProcessing');
+  const result = document.getElementById('fileResult');
+  proc.innerHTML = `<div class="processing-card"><div class="processing-icon">🔍</div><div class="processing-text">Claude is reading your notes...</div></div>`;
+
+  try {
+    const notePrompt = `${getContext()}\n\nThese are typed/pasted school notes from a Grade 4 student:\n\n"${text}"\n\nReply ONLY in JSON:\n{"document_type":"notes","subject":"best match","topics":[],"vocabulary":[],"homework":[],"test_date":null,"key_concepts":[],"summary":"2-3 sentences","parent_note":"1 sentence"}`;
+    const raw = await callClaude(notePrompt, {maxTokens:800});
+    const match = raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const extracted = match ? JSON.parse(match[0]) : {};
+    proc.innerHTML='';
+    renderFileResult('Typed notes', 'note', extracted, null, null);
+  } catch(err) {
+    proc.innerHTML='';
+    result.innerHTML=`<div style="color:var(--coral);font-size:13px">Error: ${err.message}</div>`;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════
+function saveContext() {
+  state.context = {
+    name:       document.getElementById('ctxName').value.trim(),
+    grade:      document.getElementById('ctxGrade').value.trim(),
+    favSubject: document.getElementById('ctxFavSubject').value.trim(),
+    hardSubject:document.getElementById('ctxHardSubject').value.trim(),
+    interests:  document.getElementById('ctxInterests').value.trim()
+  };
+  save(); loadSettings();
+  const btn=document.querySelector('.save-btn');
+  btn.textContent='Saved! ✓'; setTimeout(()=>btn.textContent='Save my profile',1500);
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify({exported:new Date().toISOString(),version:'1.0',...state},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download=`eduos_${new Date().toISOString().slice(0,10)}.json`; a.click();
+}
+
+function clearData() {
+  if (!confirm('Clear all data? Cannot be undone.')) return;
+  state={context:state.context, topics:[], curiosities:[], explanations:[], journals:[], files:[], vocab:[]};
+  save(); refreshHome();
+}
+
+// ═══════════════════════════════════════════════════
+// VOCABULARY BUILDER
+// ═══════════════════════════════════════════════════
+let vocabFilter = 'all';
+
+// Called when a file/notes is saved — auto-extract vocab words
+function ingestVocabFromFile(extracted) {
+  const words = extracted.vocabulary || [];
+  const subject = extracted.subject || 'General';
+  words.forEach(word => {
+    const clean = word.trim();
+    if (!clean || state.vocab.find(v => v.word.toLowerCase() === clean.toLowerCase())) return;
+    state.vocab.push({
+      id:      'voc_'+Date.now()+'_'+Math.random().toString(36).slice(2,6),
+      word:    clean,
+      subject,
+      context: extracted.summary || '',
+      status:  'new',
+      date:    new Date().toISOString()
+    });
+  });
+  save();
+}
+
+function renderVocab() {
+  const all      = state.vocab;
+  const mastered = all.filter(v=>v.status==='mastered').length;
+  const practice = all.filter(v=>v.status==='practice').length;
+
+  document.getElementById('vocabTotal').textContent    = all.length;
+  document.getElementById('vocabMastered').textContent = mastered;
+  document.getElementById('vocabPractice').textContent = practice;
+
+  // Filter chips
+  const subjects = ['all', ...new Set(all.map(v=>v.subject).filter(Boolean))];
+  document.getElementById('vocabFilters').innerHTML = subjects.map(s =>
+    `<div class="vocab-filter ${vocabFilter===s?'active':''}" onclick="setVocabFilter('${s}')">${s==='all'?'All words':s}</div>`
+  ).join('');
+
+  const list = document.getElementById('vocabList');
+  const filtered = vocabFilter==='all' ? all : all.filter(v=>v.subject===vocabFilter);
+
+  if (!filtered.length) {
+    list.innerHTML = `<div class="vocab-empty">
+      <div style="font-size:48px;margin-bottom:12px">📖</div>
+      <div style="font-size:14px;line-height:1.6;color:var(--text3)">
+        Add school files and your vocabulary will grow here automatically!<br>
+        Every new word from your worksheets and PDFs gets saved.
+      </div>
+    </div>`;
+    return;
+  }
+
+  // Show new words first, then practice, then mastered
+  const sorted = [...filtered].sort((a,b) => {
+    const order = {new:0,practice:1,mastered:2};
+    return (order[a.status]||0) - (order[b.status]||0) || new Date(b.date)-new Date(a.date);
+  });
+
+  list.innerHTML = sorted.map((v,i) => `
+    <div class="vocab-card" style="animation-delay:${(i*0.04).toFixed(2)}s">
+      <div class="vocab-word">${v.word}</div>
+      <span class="vocab-subject">${v.subject}</span>
+      ${v.context ? `<div class="vocab-context">"${v.context.slice(0,120)}${v.context.length>120?'…':''}"</div>` : ''}
+      ${v.status === 'mastered'
+        ? `<div class="vocab-mastered">✓ Mastered! <button style="background:none;border:none;color:var(--text3);font-size:11px;cursor:pointer;margin-left:8px" onclick="setVocabStatus('${v.id}','new')">Reset</button></div>`
+        : `<div class="vocab-actions">
+            <button class="vocab-btn know"     onclick="setVocabStatus('${v.id}','mastered')">✓ I know this!</button>
+            <button class="vocab-btn practice" onclick="setVocabStatus('${v.id}','practice')">📝 Practising</button>
+            <button class="vocab-btn explain"  onclick="explainVocabWord('${v.word.replace(/'/g,"\\'")}','${v.subject}')">💡 Explain</button>
+          </div>`
+      }
+    </div>`).join('');
+}
+
+function setVocabFilter(f) { vocabFilter=f; renderVocab(); }
+
+function setVocabStatus(id, status) {
+  const v = state.vocab.find(x=>x.id===id);
+  if (v) { v.status=status; save(); renderVocab(); }
+}
+
+async function explainVocabWord(word, subject) {
+  // Open explain screen with pre-filled topic
+  navTo('explain');
+  const input = document.getElementById('explainTopic');
+  input.value = `${word} (${subject})`;
+  await getExplanation();
+}
+
+// ═══════════════════════════════════════════════════
+// TEST DATE ALERTS (home screen)
+// ═══════════════════════════════════════════════════
+function renderTestAlerts() {
+  const el = document.getElementById('testAlerts');
+  if (!el) return;
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  const upcoming = [];
+
+  state.files.forEach(f => {
+    const td = f.extracted?.test_date;
+    if (!td) return;
+    try {
+      const testDate = new Date(td); testDate.setHours(0,0,0,0);
+      const daysAway = Math.round((testDate-today)/(1000*60*60*24));
+      if (daysAway >= 0 && daysAway <= 7) {
+        upcoming.push({
+          subject: f.extracted?.subject || 'Test',
+          date: testDate.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'short'}),
+          daysAway,
+          topics: (f.extracted?.topics||[]).slice(0,2).join(', ')
+        });
+      }
+    } catch(_) {}
+  });
+
+  if (!upcoming.length) { el.innerHTML=''; return; }
+
+  upcoming.sort((a,b)=>a.daysAway-b.daysAway);
+  el.innerHTML = upcoming.map(t => {
+    const urgency = t.daysAway===0?'Today!':t.daysAway===1?'Tomorrow!':
+                    t.daysAway<=3?`In ${t.daysAway} days`:`${t.date}`;
+    return `<div class="test-alert" style="margin:0 20px 8px">
+      <div class="test-alert-icon">⚠️</div>
+      <div class="test-alert-info">
+        <div class="test-alert-title">${t.subject} test — ${urgency}</div>
+        ${t.topics?`<div class="test-alert-sub">Topics: ${t.topics}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// PARENT SUMMARY in Review
+// ═══════════════════════════════════════════════════
+function buildParentSummary() {
+  const card = document.getElementById('parentSummaryCard');
+  const text = document.getElementById('parentSummaryText');
+  if (!card||!text) return;
+
+  const summaries = state.journals
+    .slice(0,5)
+    .map(j=>j.analysis?.parent_summary)
+    .filter(Boolean);
+
+  if (!summaries.length) { card.style.display='none'; return; }
+
+  card.style.display='block';
+  text.innerHTML = summaries.map(s=>`<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(43,158,143,.15)">· ${s}</div>`).join('');
+}
+
+// Hook into refreshReview
+const _origRefreshReview = refreshReview;
+function refreshReview() {
+  _origRefreshReview();
+  buildParentSummary();
+}
+
+// ═══════════════════════════════════════════════════
+// WIRE VOCAB INTO FILE SAVE
+// ═══════════════════════════════════════════════════
+// ── Additional provider helper functions ─────────────
+function saveCloudKey(providerName, inputId, statusId, cardId) {
+  const val = document.getElementById(inputId)?.value.trim();
+  if (!val) return;
+  apiKeys[providerName] = val;
+  saveApiKeys();
+  document.getElementById(inputId).value = '';
+  const status = document.getElementById(statusId);
+  const card   = document.getElementById(cardId);
+  if (status) { status.textContent='✓ Set'; status.className='api-key-status set'; }
+  if (card)   card.classList.add('has-key');
+  updateApiKeyUI();
+}
+
+async function testLocalProvider() {
+  const statusEl = document.getElementById('localProviderStatus');
+  const card     = document.getElementById('localKeyCard');
+  const badge    = document.getElementById('localKeyStatus');
+  if (statusEl) statusEl.textContent = '⏳ Testing...';
+  const ok = await pingLocalProvider('gemma_local');
+  const model = apiKeys.gemma_local_model || 'gemma4:2b';
+  const url   = apiKeys.gemma_local_url   || 'http://localhost:11434';
+  if (statusEl) {
+    statusEl.textContent  = ok ? `✓ Connected · ${model} at ${url}` : `✗ Not reachable at ${url} — is Ollama/AI Edge running?`;
+    statusEl.style.color  = ok ? 'var(--green)' : 'var(--coral)';
+  }
+  if (badge) { badge.textContent = ok ? '✓ Running' : '✗ Offline'; badge.className = `api-key-status ${ok?'set':'unset'}`; }
+  if (card)  card.classList.toggle('has-key', ok);
+  updateApiKeyUI();
+}
+
+function loadSettings() {
+  const c = state.context;
+  document.getElementById('ctxName').value        = c.name        ||'';
+  document.getElementById('ctxGrade').value       = c.grade       ||'';
+  document.getElementById('ctxFavSubject').value  = c.favSubject  ||'';
+  document.getElementById('ctxHardSubject').value = c.hardSubject ||'';
+  document.getElementById('ctxInterests').value   = c.interests   ||'';
+  document.getElementById('profileName').textContent  = c.name  ||'Student';
+  document.getElementById('profileGrade').textContent = c.grade ? `Class ${c.grade}` : 'Grade 4';
+
+  // Populate provider fields
+  const localUrl   = document.getElementById('localUrlInput');
+  const localModel = document.getElementById('localModelInput');
+  if (localUrl)   localUrl.value   = apiKeys.gemma_local_url   || 'http://localhost:11434';
+  if (localModel) localModel.value = apiKeys.gemma_local_model || 'gemma4:2b';
+
+  // Sync all cloud provider status badges
+  [
+    { name:'groq',   statusId:'groqKeyStatus',   cardId:'groqKeyCard' },
+    { name:'gemini', statusId:'geminiKeyStatus', cardId:'geminiKeyCard' },
+    { name:'openai', statusId:'openaiKeyStatus', cardId:'openaiKeyCard' },
+  ].forEach(({ name, statusId, cardId }) => {
+    const el   = document.getElementById(statusId);
+    const card = document.getElementById(cardId);
+    const has  = !!apiKeys[name];
+    if (el)   { el.textContent = has ? '✓ Set' : 'Not set'; el.className = `api-key-status ${has?'set':'unset'}`; }
+    if (card) card.classList.toggle('has-key', has);
+  });
+
+  updateApiKeyUI();
+  updateSettingsFileRow();
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+load();
+loadApiKeys();
+
+// Init file bar
+const lastFileName = localStorage.getItem(FILE_NAME_LS);
+if (lastFileName) {
+  setFileBar('unlinked', `Tap to relink: ${lastFileName}`);
+} else {
+  setFileBar('unlinked', 'Tap to link a data file');
+}
+
+if (!localStorage.getItem(KEYS.onboarded)) {
+  startOnboard();
+} else {
+  refreshHome();
+}
+
+// Ping local providers in background — non-blocking
+setTimeout(() => pingAllLocalProviders().then(updateApiKeyUI), 1000);
+
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') closeSheet();
+  if ((e.ctrlKey||e.metaKey)&&e.key==='Enter'&&document.getElementById('sheetOverlay').classList.contains('open')) saveSheet();
+});
+
+
+// ═══════════════════════════════════════════════════
+// SERVICE WORKER + SHARE ROUTING
+// ═══════════════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./eduos-sw.js');
+      console.log('[EduOS] SW registered:', reg.scope);
+      navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data?.type === 'SHARE_RECEIVED') handleIncomingShare(event.data);
+      });
+      checkPendingShare();
+    } catch (err) {
+      console.warn('[EduOS] SW registration failed:', err);
+    }
+  });
+}
+
+async function checkPendingShare() {
+  try {
+    if (!('caches' in window)) return;
+    const cache   = await caches.open('eduos-v1');
+    const pending = await cache.match('/_share_pending');
+    if (!pending) return;
+    const data = await pending.json();
+    await cache.delete('/_share_pending');
+    setTimeout(() => handleIncomingShare(data), 600);
+  } catch(_) {}
+}
+
+// ── Pending share data (held until user confirms route) ──
+let _pendingShare = null;
+let _selectedRoute = null;
+
+function handleIncomingShare(data) {
+  if (!data) return;
+
+  if (data.type === 'text' && data.text) {
+    // Text share — straight to capture sheet, no routing needed
+    openSheet('note');
+    setTimeout(() => {
+      const ta = document.getElementById('sheetText');
+      if (ta) ta.value = [data.title, data.text, data.url].filter(Boolean).join('\n');
+    }, 400);
+    return;
+  }
+
+  if (data.type === 'file' && data.base64) {
+    // File share — show routing sheet
+    _pendingShare   = data;
+    _selectedRoute  = null;
+    showShareRoute(data);
+  }
+}
+
+// ── Share routing sheet ────────────────────────────
+function showShareRoute(data) {
+  // Update file preview
+  const isImage = data.fileType?.startsWith('image/');
+  const isPDF   = data.fileType === 'application/pdf';
+  document.getElementById('srsFileIcon').textContent = isPDF ? '📋' : '📷';
+  document.getElementById('srsFileName').textContent = data.fileName || 'Shared file';
+  document.getElementById('srsFileSize').textContent =
+    data.fileSize ? `${(data.fileSize/1024).toFixed(0)} KB · ${isImage?'Image':'PDF'}` : '';
+
+  // Reset selection
+  document.querySelectorAll('.srs-option').forEach(o => o.classList.remove('selected'));
+  document.getElementById('srsConfirm').disabled = true;
+  document.getElementById('srsConfirm').textContent = 'Choose a destination →';
+
+  // Remove old badge, re-add to files option (it gets removed on re-render)
+  const badge = document.querySelector('#srsOptFiles .srs-opt-badge');
+  if (badge) badge.style.display = isPDF ? 'inline' : 'inline';
+
+  // Show sheet
+  const overlay = document.getElementById('shareRouteOverlay');
+  const sheet   = document.getElementById('shareRouteSheet');
+  overlay.classList.add('open');
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    overlay.classList.add('visible');
+    sheet.classList.add('open');
+  }));
+}
+
+function selectShareRoute(route) {
+  _selectedRoute = route;
+  document.querySelectorAll('.srs-option').forEach(o => o.classList.remove('selected'));
+
+  const labels = {
+    files:     'Send to School Files →',
+    notes:     'Log as Class Notes →',
+    curiosity: 'Add to Curiosity Log →'
+  };
+  document.getElementById('srsOpt' + route.charAt(0).toUpperCase() + route.slice(1))
+    ?.classList.add('selected');
+  const btn = document.getElementById('srsConfirm');
+  btn.disabled = false;
+  btn.textContent = labels[route] || 'Process →';
+}
+
+function closeShareRoute() {
+  const overlay = document.getElementById('shareRouteOverlay');
+  const sheet   = document.getElementById('shareRouteSheet');
+  overlay.classList.remove('visible');
+  sheet.classList.remove('open');
+  setTimeout(() => { overlay.classList.remove('open'); }, 320);
+  _pendingShare  = null;
+  _selectedRoute = null;
+}
+
+async function confirmShareRoute() {
+  if (!_pendingShare || !_selectedRoute) return;
+  const data  = _pendingShare;
+  const route = _selectedRoute;
+  closeShareRoute();
+
+  switch (route) {
+    case 'files':
+      navTo('files');
+      setTimeout(() => processSharedFile(data, 'files'), 300);
+      break;
+    case 'notes':
+      navTo('subjects');
+      setTimeout(() => processSharedAsNotes(data), 300);
+      break;
+    case 'curiosity':
+      navTo('curiosity');
+      setTimeout(() => processSharedAsCuriosity(data), 300);
+      break;
+  }
+}
+
+// ── Route 1: School Files (existing flow) ─────────
+async function processSharedFile(shareData) {
+  const proc   = document.getElementById('fileProcessing');
+  const result = document.getElementById('fileResult');
+  if (!proc || !result) return;
+
+  const isImage = shareData.fileType?.startsWith('image/');
+  const isPDF   = shareData.fileType === 'application/pdf';
+  const type    = isPDF ? 'pdf' : 'photo';
+
+  proc.innerHTML = `<div class="processing-card">
+    <div class="processing-icon">🔍</div>
+    <div class="processing-text">Claude is reading your shared ${isPDF?'PDF':'photo'}...<br>
+    <small>${shareData.fileName || 'Shared from another app'}</small></div>
+  </div>`;
+  result.innerHTML = '';
+
+  try {
+    const media      = isPDF ? 'application/pdf' : shareData.fileType;
+    const msgContent = [
+      { type: isPDF?'document':'image', source:{type:'base64', media_type:media, data:shareData.base64} },
+      { type: 'text', text: `${getContext()}
+
+This is a school document shared by a Grade 4 student. Extract all useful information.
+
+Reply ONLY in JSON:
+{
+  "document_type": "worksheet|notes|handout|question_paper|textbook_page|other",
+  "subject": "best match from: Mathematics/English/Science EVS/Social Studies/Hindi/Telugu/Computer Science",
+  "topics": ["topic1", "topic2"],
+  "vocabulary": ["new word 1", "new word 2"],
+  "homework": ["homework item if any"],
+  "test_date": "date string if visible, else null",
+  "key_concepts": ["important concept"],
+  "summary": "2-3 sentences, Grade 4 friendly",
+  "parent_note": "1 sentence for parents"
+}` }
+    ];
+
+    const raw       = await callClaude('', {images:msgContent, maxTokens:1000});
+    const match     = raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const extracted = match ? JSON.parse(match[0]) : {};
+
+    proc.innerHTML = '';
+    renderFileResult(shareData.fileName || 'Shared file', type, extracted, shareData.base64, media);
+
+  } catch(err) {
+    proc.innerHTML = '';
+    result.innerHTML = `<div style="color:var(--coral);font-size:13px;padding:12px 0">Error: ${err.message}</div>`;
+  }
+}
+
+// ── Route 2: Class Notes → Subjects tracker ───────
+async function processSharedAsNotes(shareData) {
+  // Show processing in the subjects area
+  const list = document.getElementById('subjectList');
+  if (!list) return;
+
+  list.innerHTML = `<div class="processing-card" style="margin:0">
+    <div class="processing-icon">🔍</div>
+    <div class="processing-text">Reading your class notes...<br>
+    <small>Claude will identify the subject and topics</small></div>
+  </div>`;
+
+  try {
+    const isImage = shareData.fileType?.startsWith('image/');
+    const isPDF   = shareData.fileType === 'application/pdf';
+    const media   = isPDF ? 'application/pdf' : shareData.fileType;
+
+    const msgContent = [
+      { type: isPDF?'document':'image', source:{type:'base64', media_type:media, data:shareData.base64} },
+      { type: 'text', text: `${getContext()}
+
+This is a photo of class notes or a whiteboard from a Grade 4 student.
+Identify what was taught.
+
+Reply ONLY in JSON:
+{
+  "subject": "exact match: Mathematics|English|Science / EVS|Social Studies|Hindi|Telugu|Computer Science",
+  "topics": [
+    {
+      "topic": "specific topic name",
+      "understood": "yes|partially|no",
+      "key_point": "one sentence about what was covered"
+    }
+  ],
+  "vocabulary": ["new terms introduced"],
+  "summary": "2-3 sentences describing what the notes cover",
+  "confidence": "high|medium|low"
+}` }
+    ];
+
+    const raw     = await callClaude('', {images:msgContent, maxTokens:800});
+    const match   = raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const parsed  = match ? JSON.parse(match[0]) : {};
+
+    if (!parsed.subject || !parsed.topics?.length) {
+      renderSubjects();
+      alert('Could not identify the subject clearly. Try School Files instead for better extraction.');
+      return;
+    }
+
+    // Save each topic to the subject tracker
+    const subject = parsed.subject;
+    let saved = 0;
+    (parsed.topics || []).forEach(t => {
+      state.topics.unshift({
+        id:        'top_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),
+        date:      new Date().toISOString(),
+        subject,
+        topic:     t.topic,
+        understood:t.understood || 'yes',
+        loggedBy:  'class_notes_share',
+        notes:     t.key_point || ''
+      });
+      saved++;
+    });
+
+    // Ingest vocabulary
+    if (parsed.vocabulary?.length) {
+      ingestVocabFromFile({ subject, vocabulary:parsed.vocabulary, summary:parsed.summary });
+    }
+
+    save();
+    renderSubjects();
+
+    // Show a friendly confirmation
+    const confirmEl = document.createElement('div');
+    confirmEl.style.cssText = `
+      background:var(--green-dim); border:2px solid var(--green);
+      border-radius:var(--radius); padding:16px 20px; margin:16px 20px 0;
+      animation:popIn .3s ease;
+    `;
+    confirmEl.innerHTML = `
+      <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:6px">
+        ✓ Class notes logged!
+      </div>
+      <div style="font-size:13px;color:var(--text2);line-height:1.5">
+        <strong>${subject}</strong> · ${saved} topic${saved!==1?'s':''} added to your subject tracker
+        ${parsed.summary ? `<br><br>${parsed.summary}` : ''}
+      </div>
+    `;
+    list.parentElement.insertBefore(confirmEl, list);
+    setTimeout(() => confirmEl.remove(), 5000);
+
+  } catch(err) {
+    renderSubjects();
+    alert('Error reading notes: ' + err.message);
+  }
+}
+
+// ── Route 3: Curiosity → Curiosity Log ────────────
+async function processSharedAsCuriosity(shareData) {
+  const list = document.getElementById('curiosityList');
+  if (!list) return;
+
+  list.innerHTML = `<div style="text-align:center;padding:32px 20px;color:var(--text3)">
+    <div style="font-size:40px;margin-bottom:12px">🔍</div>
+    <div>Claude is figuring out what you found interesting...</div>
+  </div>`;
+
+  try {
+    const isImage = shareData.fileType?.startsWith('image/');
+    const isPDF   = shareData.fileType === 'application/pdf';
+    const media   = isPDF ? 'application/pdf' : shareData.fileType;
+
+    const msgContent = [
+      { type: isPDF?'document':'image', source:{type:'base64', media_type:media, data:shareData.base64} },
+      { type: 'text', text: `${getContext()}
+
+A Grade 4 student shared this because they found it interesting or curious.
+First understand what it shows, then craft a curiosity question about it.
+
+Reply ONLY in JSON:
+{
+  "curiosity_question": "turn what's shown into a natural curious question a child would ask",
+  "explanation": "2-3 sentences explaining it at Grade 4 level, fun and simple",
+  "followUp": "one surprising related fact",
+  "activity": "one hands-on thing they could do at home to explore this further",
+  "questionBack": "one Socratic question to deepen their thinking"
+}` }
+    ];
+
+    const raw    = await callClaude('', {images:msgContent, maxTokens:800});
+    const match  = raw.replace(/```json|```/g,'').trim().match(/\{[\s\S]*\}/);
+    const parsed = match ? JSON.parse(match[0]) : {};
+
+    const question = parsed.curiosity_question || 'What is this about?';
+
+    // Save directly with the full expansion already populated
+    const entry = {
+      id:           'cur_'+Date.now(),
+      date:         new Date().toISOString(),
+      question,
+      explanation:  parsed.explanation  || '',
+      followUp:     parsed.followUp     || '',
+      activity:     parsed.activity     || '',
+      questionBack: parsed.questionBack || '',
+      fromShare:    true
+    };
+    state.curiosities.unshift(entry);
+    save();
+    renderCuriosities();
+
+    // Auto-expand the new entry
+    setTimeout(() => {
+      document.getElementById('cur_'+entry.id)?.classList.add('expanded');
+    }, 100);
+
+  } catch(err) {
+    renderCuriosities();
+    alert('Error: ' + err.message);
+  }
+}
+
+
+
+// ── Version display ───────────────────────────────────
+function showAppVersion() {
+  const meta = document.getElementById('app-version');
+  const el   = document.getElementById('aboutVersion');
+  if (!meta || !el) return;
+  const v = meta.getAttribute('content') || 'unknown';
+  const d = new Date(v);
+  const fmt = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
+  el.textContent = 'Updated ' + fmt + ' · Voice Journal · School Files · Vocabulary · Multi-provider AI';
+}
+
+showAppVersion();
+
+</script>
+</body>
+</html>

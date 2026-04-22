@@ -1,0 +1,43 @@
+{
+  "name": "EduOS",
+  "short_name": "EduOS",
+  "description": "Your personal learning companion — voice journal, school files, curiosity, vocabulary",
+  "start_url": "./eduOS.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#fdf8f2",
+  "theme_color": "#2b9e8f",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "eduos-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "eduos-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["education", "productivity"],
+  "share_target": {
+    "action": "./eduOS.html",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text":  "text",
+      "url":   "url",
+      "files": [
+        {
+          "name":   "file",
+          "accept": ["image/*", "application/pdf", "image/jpeg", "image/png", "image/webp"]
+        }
+      ]
+    }
+  }
+}
