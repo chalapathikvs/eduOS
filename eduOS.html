@@ -2794,7 +2794,7 @@ if ('serviceWorker' in navigator) {
 async function checkPendingShare() {
   try {
     if (!('caches' in window)) return;
-    const cache   = await caches.open('eduos-v1');
+    const cache   = await caches.open('eduos-2026-04-19');
     const pending = await cache.match('/_share_pending');
     if (!pending) return;
     const data = await pending.json();
