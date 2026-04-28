@@ -7,12 +7,12 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="EduOS">
 <meta name="theme-color" content="#fdf8f2">
-<meta name="app-version" content="2026-04-19" id="app-version">
+<meta name="app-version" content="2026-04-28" id="app-version">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="description" content="Your personal learning companion">
 <title>EduOS</title>
-<link rel="manifest" href="eduos-manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="eduos-manifest-2.json">
+<link rel="apple-touch-icon" href="eduos-icon-192.png">
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Architects+Daughter&display=swap" rel="stylesheet">
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -570,6 +570,100 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text
 .module-card:nth-child(1){animation-delay:.04s} .module-card:nth-child(2){animation-delay:.08s}
 .module-card:nth-child(3){animation-delay:.12s} .module-card:nth-child(4){animation-delay:.16s}
 .module-card:nth-child(5){animation-delay:.20s} .module-card:nth-child(6){animation-delay:.24s}
+
+/* ── PWA Install Banner ── */
+#pwaInstallBanner {
+  display:none; position:fixed; bottom:calc(var(--nav-h) + 8px); left:50%;
+  transform:translateX(-50%); width:calc(100% - 32px); max-width:448px;
+  background:linear-gradient(135deg,#2b9e8f 0%,#1d8a7c 100%);
+  border-radius:var(--radius); padding:14px 16px;
+  box-shadow:0 8px 32px rgba(43,158,143,.35); z-index:200;
+  animation:slideUp .4s cubic-bezier(.32,.72,0,1);
+}
+#pwaInstallBanner.show { display:flex; align-items:center; gap:12px; }
+@keyframes slideUp { from{opacity:0;transform:translateX(-50%) translateY(20px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+.pwa-banner-icon { font-size:32px; flex-shrink:0; }
+.pwa-banner-text { flex:1; }
+.pwa-banner-title { font-size:14px; font-weight:700; color:white; margin-bottom:2px; }
+.pwa-banner-sub { font-size:11px; color:rgba(255,255,255,.75); }
+.pwa-banner-btn { background:white; color:var(--teal); border:none; font-family:var(--sans); font-size:12px; font-weight:700; padding:8px 14px; border-radius:20px; cursor:pointer; white-space:nowrap; flex-shrink:0; transition:opacity .15s; }
+.pwa-banner-btn:active { opacity:.8; }
+.pwa-banner-close { color:rgba(255,255,255,.6); font-size:18px; cursor:pointer; padding:4px; flex-shrink:0; line-height:1; }
+.pwa-banner-close:active { color:white; }
+
+/* ── Settings: Install row ── */
+.install-row { background:var(--teal-dim); border:2px solid rgba(43,158,143,.3) !important; }
+.install-row .settings-row-label { color:var(--teal); }
+
+/* ── Creative Portfolio ── */
+.portfolio-wrap { padding:16px 20px; }
+.portfolio-upload-methods { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.portfolio-upload-method {
+  background:var(--surface); border:2px dashed var(--border);
+  border-radius:var(--radius); padding:20px 12px; text-align:center;
+  cursor:pointer; transition:all .2s; position:relative; overflow:hidden;
+}
+.portfolio-upload-method:active, .portfolio-upload-method:hover { border-color:var(--coral); background:var(--coral-dim); }
+.portfolio-upload-method-icon { font-size:32px; margin-bottom:6px; }
+.portfolio-upload-method-label { font-size:12px; font-weight:700; color:var(--text2); }
+.portfolio-upload-method-sub { font-size:10px; color:var(--text3); margin-top:2px; }
+.portfolio-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.portfolio-item {
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  overflow:hidden; cursor:pointer; transition:all .15s; animation:popIn .35s ease both;
+  position:relative;
+}
+.portfolio-item:active { transform:scale(.97); border-color:var(--coral); }
+.portfolio-item-thumb { width:100%; aspect-ratio:1; object-fit:cover; display:block; background:var(--bg2); }
+.portfolio-item-thumb-placeholder { width:100%; aspect-ratio:1; display:flex; align-items:center; justify-content:center; font-size:40px; background:var(--bg2); }
+.portfolio-item-meta { padding:8px 10px; }
+.portfolio-item-title { font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.portfolio-item-date { font-size:10px; color:var(--text3); margin-top:1px; }
+.portfolio-item-type { position:absolute; top:6px; right:6px; font-size:10px; font-weight:700; padding:2px 7px; border-radius:8px; }
+.portfolio-empty { text-align:center; padding:48px 24px; color:var(--text3); }
+.portfolio-empty-icon { font-size:48px; margin-bottom:12px; }
+
+/* Portfolio viewer overlay */
+#portfolioViewer {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.92);
+  z-index:400; flex-direction:column; align-items:center; justify-content:center;
+}
+#portfolioViewer.open { display:flex; }
+.pv-close { position:absolute; top:16px; right:16px; color:white; font-size:28px; cursor:pointer; z-index:1; padding:8px; line-height:1; }
+.pv-img { max-width:100%; max-height:70vh; object-fit:contain; border-radius:8px; }
+.pv-meta { color:white; text-align:center; padding:16px 24px; }
+.pv-title { font-size:16px; font-weight:700; margin-bottom:4px; }
+.pv-date { font-size:12px; opacity:.6; }
+.pv-actions { display:flex; gap:12px; margin-top:12px; }
+.pv-btn { padding:8px 20px; border-radius:20px; font-family:var(--sans); font-size:13px; font-weight:700; cursor:pointer; border:none; transition:all .15s; }
+.pv-btn.rename { background:rgba(255,255,255,.15); color:white; }
+.pv-btn.delete { background:rgba(232,99,74,.25); color:#ff8a75; }
+.pv-btn:active { opacity:.75; }
+
+/* Portfolio save caption sheet */
+#portfolioSaveSheet {
+  display:none; position:fixed; inset:0; z-index:410;
+  background:rgba(45,36,32,.6); align-items:flex-end; justify-content:center;
+  backdrop-filter:blur(2px);
+}
+#portfolioSaveSheet.open { display:flex; }
+.pss-inner {
+  background:var(--surface); border-radius:20px 20px 0 0; padding:20px 20px 40px;
+  width:100%; max-width:480px;
+}
+.pss-handle { width:40px; height:4px; background:var(--border2); border-radius:2px; margin:0 auto 16px; }
+.pss-title { font-family:var(--display); font-size:18px; color:var(--text); margin-bottom:4px; text-align:center; }
+.pss-sub { font-size:12px; color:var(--text3); text-align:center; margin-bottom:16px; }
+.pss-preview { width:80px; height:80px; object-fit:cover; border-radius:var(--radius); margin:0 auto 16px; display:block; background:var(--bg2); }
+.pss-preview-placeholder { width:80px; height:80px; border-radius:var(--radius); margin:0 auto 16px; display:flex; align-items:center; justify-content:center; font-size:36px; background:var(--bg2); }
+.pss-input { width:100%; background:var(--bg2); border:2px solid var(--border); color:var(--text); font-family:var(--sans); font-size:15px; padding:12px 14px; outline:none; border-radius:var(--radius); margin-bottom:12px; transition:border-color .15s; }
+.pss-input:focus { border-color:var(--coral); }
+.pss-tags { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:16px; }
+.pss-tag { padding:6px 14px; border-radius:20px; font-size:12px; font-weight:700; border:1px solid var(--border); background:var(--surface); color:var(--text3); cursor:pointer; transition:all .15s; }
+.pss-tag.sel { border-color:var(--coral); background:var(--coral-dim); color:var(--coral); }
+.pss-save { width:100%; padding:14px; background:var(--coral); color:white; border:none; font-family:var(--sans); font-size:15px; font-weight:700; border-radius:var(--radius); cursor:pointer; transition:opacity .15s; }
+.pss-save:active { opacity:.85; }
+.pss-cancel { width:100%; text-align:center; padding:10px; color:var(--text3); font-size:13px; cursor:pointer; margin-top:4px; }
 </style>
 </head>
 <body>
@@ -629,6 +723,11 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text
         <span class="card-icon">📖</span>
         <div class="card-name">Vocabulary</div>
         <div class="card-stat" id="vocabStat">Words from your files</div>
+      </div>
+      <div class="module-card" onclick="navTo('portfolio')">
+        <span class="card-icon">🎨</span>
+        <div class="card-name">My Portfolio</div>
+        <div class="card-stat" id="portfolioStat">Art &amp; creations</div>
       </div>
       <div class="module-card wide" onclick="navTo('review')">
         <span class="card-icon">🏆</span>
@@ -982,6 +1081,11 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text
       </div>
       <div class="settings-section">
         <div class="settings-title">About</div>
+        <div class="settings-row install-row" id="settingsInstallRow" onclick="triggerPwaInstall()" style="display:none">
+          <span class="settings-row-icon">📲</span>
+          <div class="settings-row-info"><div class="settings-row-label">Install EduOS</div><div class="settings-row-sub">Add to home screen — works offline</div></div>
+          <div class="settings-row-right" style="color:var(--teal)">Install</div>
+        </div>
         <div class="settings-row">
           <span class="settings-row-icon">🎓</span>
           <div class="settings-row-info"><div class="settings-row-label">EduOS</div><div class="settings-row-sub" id="aboutVersion">Loading...</div></div>
@@ -1034,6 +1138,17 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text
   </div>
 </div>
 
+<!-- ══ PWA INSTALL BANNER ══════════════════════════════ -->
+<div id="pwaInstallBanner">
+  <div class="pwa-banner-icon">📲</div>
+  <div class="pwa-banner-text">
+    <div class="pwa-banner-title">Install EduOS on your phone!</div>
+    <div class="pwa-banner-sub">Works offline · No app store needed</div>
+  </div>
+  <button class="pwa-banner-btn" onclick="triggerPwaInstall()">Install</button>
+  <div class="pwa-banner-close" onclick="dismissPwaBanner()">✕</div>
+</div>
+
 <!-- ══ SHARE ROUTING SHEET ════════════════════════════ -->
 <div id="shareRouteOverlay" onclick="closeShareRoute()"></div>
 <div id="shareRouteSheet">
@@ -1084,6 +1199,78 @@ html,body { height:100%; overflow:hidden; background:var(--bg); color:var(--text
   <div class="srs-cancel" onclick="closeShareRoute()">Cancel</div>
 </div>
 
+<!-- ══ CREATIVE PORTFOLIO ═════════════════════════════ -->
+<div id="screen-portfolio" class="screen">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-title">🎨 My Portfolio</div>
+      <div class="topbar-sub">Your artwork &amp; creations</div>
+    </div>
+  </div>
+  <div class="scroll-area">
+    <div class="portfolio-wrap">
+      <div class="portfolio-upload-methods">
+        <div class="portfolio-upload-method" onclick="document.getElementById('portfolioCamera').click()">
+          <div class="portfolio-upload-method-icon">📷</div>
+          <div class="portfolio-upload-method-label">Take Photo</div>
+          <div class="portfolio-upload-method-sub">Snap your artwork</div>
+        </div>
+        <div class="portfolio-upload-method" onclick="document.getElementById('portfolioGallery').click()">
+          <div class="portfolio-upload-method-icon">🖼️</div>
+          <div class="portfolio-upload-method-label">From Gallery</div>
+          <div class="portfolio-upload-method-sub">Pick a saved image</div>
+        </div>
+        <div class="portfolio-upload-method" onclick="document.getElementById('portfolioPDF').click()">
+          <div class="portfolio-upload-method-icon">📄</div>
+          <div class="portfolio-upload-method-label">Add PDF</div>
+          <div class="portfolio-upload-method-sub">Art or story booklet</div>
+        </div>
+        <div class="portfolio-upload-method" onclick="openPortfolioNote()">
+          <div class="portfolio-upload-method-icon">✍️</div>
+          <div class="portfolio-upload-method-label">Write / Poem</div>
+          <div class="portfolio-upload-method-sub">Story, poem, idea</div>
+        </div>
+      </div>
+      <input type="file" id="portfolioCamera"  accept="image/*" capture="environment" style="display:none" onchange="handlePortfolioUpload(this,'photo')">
+      <input type="file" id="portfolioGallery" accept="image/*" style="display:none" onchange="handlePortfolioUpload(this,'image')">
+      <input type="file" id="portfolioPDF"     accept=".pdf,application/pdf" style="display:none" onchange="handlePortfolioUpload(this,'pdf')">
+      <div class="saved-label">Your creations</div>
+      <div class="portfolio-grid" id="portfolioGrid"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Portfolio Image Viewer -->
+<div id="portfolioViewer">
+  <div class="pv-close" onclick="closePortfolioViewer()">&#x2715;</div>
+  <img class="pv-img" id="pvImg" src="" alt="artwork" style="display:none">
+  <div id="pvPdfIcon" style="display:none;font-size:80px;text-align:center;color:white">📄</div>
+  <div class="pv-meta">
+    <div class="pv-title" id="pvTitle"></div>
+    <div class="pv-date" id="pvDate"></div>
+    <div class="pv-actions">
+      <button class="pv-btn rename" onclick="renamePortfolioItem()">✏️ Rename</button>
+      <button class="pv-btn delete" onclick="deletePortfolioItem()">🗑️ Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Portfolio Save Sheet -->
+<div id="portfolioSaveSheet">
+  <div class="pss-inner">
+    <div class="pss-handle"></div>
+    <div class="pss-title">Name your creation 🎨</div>
+    <div class="pss-sub">Give it a title so you remember it!</div>
+    <img class="pss-preview" id="pssPreviewImg" src="" alt="" style="display:none">
+    <div class="pss-preview-placeholder" id="pssPreviewPlaceholder" style="display:none"></div>
+    <input class="pss-input" id="pssTitleInput" placeholder="e.g. My dinosaur drawing..." maxlength="60">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:8px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">Tag it</div>
+    <div class="pss-tags" id="pssTags"></div>
+    <button class="pss-save" onclick="confirmPortfolioSave()">💾 Save to portfolio</button>
+    <div class="pss-cancel" onclick="cancelPortfolioSave()">Cancel</div>
+  </div>
+</div>
+
 <!-- ══ CAPTURE SHEET ═════════════════════════════════ -->
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
 <div class="sheet" id="captureSheet">
@@ -1104,7 +1291,8 @@ const KEYS = {
   context:'eduos_context_v1', topics:'eduos_topics_v1',
   curiosities:'eduos_curiosities_v1', explanations:'eduos_explanations_v1',
   journals:'eduos_journals_v1', files:'eduos_files_v1',
-  vocab:'eduos_vocab_v1', onboarded:'eduos_onboarded_v1'
+  vocab:'eduos_vocab_v1', onboarded:'eduos_onboarded_v1',
+  portfolio:'eduos_portfolio_v1'
 };
 const FILE_NAME_LS  = 'eduos_file_name_v1';
 const API_KEYS_LS   = 'eduos_api_keys_v1';
@@ -1127,7 +1315,8 @@ let state = {
   explanations:[],
   journals:    [],
   files:       [],
-  vocab:       []
+  vocab:       [],
+  portfolio:   []
 };
 
 // ── Shared AI provider system (same as Life OS) ───────
@@ -1719,7 +1908,8 @@ function navTo(screen) {
   if (nav) nav.classList.add('active');
   const fns = {home:refreshHome, subjects:renderSubjects, curiosity:renderCuriosities,
     explain:renderSavedExplanations, review:refreshReview, settings:loadSettings,
-    journal:renderJournalEntries, files:renderSavedFiles, vocab:renderVocab};
+    journal:renderJournalEntries, files:renderSavedFiles, vocab:renderVocab,
+    portfolio:renderPortfolio};
   if (fns[screen]) fns[screen]();
 }
 
@@ -1745,6 +1935,8 @@ function refreshHome() {
   document.getElementById('curiosityStat').textContent= state.curiosities.length? `${state.curiosities.length} questions` : 'Ask anything';
   document.getElementById('explainStat').textContent  = state.explanations.length? `${state.explanations.length} saved` : 'Get help understanding';
   document.getElementById('vocabStat').textContent    = state.vocab.length ? `${state.vocab.length} words · ${state.vocab.filter(v=>v.status==='mastered').length} mastered` : 'Words from your files';
+  const pStat = document.getElementById('portfolioStat');
+  if (pStat) pStat.textContent = state.portfolio?.length ? `${state.portfolio.length} creation${state.portfolio.length!==1?'s':''}` : 'Art & creations';
 
   renderTestAlerts();
   buildInsights();
@@ -3122,6 +3314,233 @@ Reply ONLY in JSON:
 
 
 
+// ═══════════════════════════════════════════════════
+// PWA INSTALL (Android)
+// ═══════════════════════════════════════════════════
+let _pwaPrompt = null;
+const PWA_DISMISSED_KEY = 'eduos_pwa_dismissed';
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  _pwaPrompt = e;
+  // Only show if not dismissed before and not already installed
+  if (!localStorage.getItem(PWA_DISMISSED_KEY) && !window.matchMedia('(display-mode: standalone)').matches) {
+    setTimeout(() => {
+      document.getElementById('pwaInstallBanner')?.classList.add('show');
+      const installRow = document.getElementById('settingsInstallRow');
+      if (installRow) installRow.style.display = 'flex';
+    }, 2500); // slight delay so user settles in
+  }
+});
+
+window.addEventListener('appinstalled', () => {
+  _pwaPrompt = null;
+  document.getElementById('pwaInstallBanner')?.classList.remove('show');
+  const installRow = document.getElementById('settingsInstallRow');
+  if (installRow) installRow.style.display = 'none';
+});
+
+async function triggerPwaInstall() {
+  if (!_pwaPrompt) {
+    // Already installed or browser doesn't support it — show instructions
+    alert('To install EduOS:\n\n1. Tap the ⋮ menu (three dots) in Chrome\n2. Tap "Add to Home screen"\n3. Tap "Add" to confirm\n\nEduOS will appear on your home screen like a native app!');
+    return;
+  }
+  document.getElementById('pwaInstallBanner')?.classList.remove('show');
+  _pwaPrompt.prompt();
+  const { outcome } = await _pwaPrompt.userChoice;
+  if (outcome === 'accepted') {
+    _pwaPrompt = null;
+    localStorage.setItem(PWA_DISMISSED_KEY, '1');
+  }
+}
+
+function dismissPwaBanner() {
+  document.getElementById('pwaInstallBanner')?.classList.remove('show');
+  localStorage.setItem(PWA_DISMISSED_KEY, '1');
+}
+
+// Show install row in settings if prompt is available
+function updateInstallUI() {
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const installRow = document.getElementById('settingsInstallRow');
+  if (installRow && !isStandalone) installRow.style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════════════
+// CREATIVE PORTFOLIO
+// ═══════════════════════════════════════════════════
+const PORTFOLIO_TAGS = ['Drawing','Painting','Craft','Story','Poem','Photo','Science','Other'];
+let _portfolioPending = null; // {base64, mediaType, kind}
+let _portfolioViewingId = null;
+
+function handlePortfolioUpload(input, kind) {
+  const file = input.files[0];
+  if (!file) return;
+  input.value = '';
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const base64 = ev.target.result.split(',')[1];
+    const mediaType = file.type;
+    openPortfolioSaveSheet(base64, mediaType, kind, file.name);
+  };
+  reader.readAsDataURL(file);
+}
+
+function openPortfolioNote() {
+  // Use existing capture sheet for text notes
+  openSheet('note');
+  // Override save to go to portfolio
+  window._portfolioNoteMode = true;
+}
+
+function openPortfolioSaveSheet(base64, mediaType, kind, fileName) {
+  _portfolioPending = { base64, mediaType, kind, fileName };
+  const sheet = document.getElementById('portfolioSaveSheet');
+  const previewImg = document.getElementById('pssPreviewImg');
+  const previewPh  = document.getElementById('pssPreviewPlaceholder');
+
+  if (mediaType.startsWith('image/')) {
+    previewImg.src = `data:${mediaType};base64,${base64}`;
+    previewImg.style.display = 'block';
+    previewPh.style.display = 'none';
+  } else {
+    previewImg.style.display = 'none';
+    previewPh.textContent = '📄';
+    previewPh.style.display = 'flex';
+  }
+
+  // Suggest title from filename
+  const nameSuggestion = (fileName || '').replace(/\.[^.]+$/, '').replace(/[-_]/g,' ');
+  document.getElementById('pssTitleInput').value = nameSuggestion || '';
+
+  // Render tags
+  document.getElementById('pssTags').innerHTML = PORTFOLIO_TAGS.map(t =>
+    `<div class="pss-tag" onclick="togglePortfolioTag(this)">${t}</div>`
+  ).join('');
+
+  sheet.classList.add('open');
+  setTimeout(() => document.getElementById('pssTitleInput').focus(), 300);
+}
+
+function togglePortfolioTag(el) {
+  el.classList.toggle('sel');
+}
+
+function cancelPortfolioSave() {
+  document.getElementById('portfolioSaveSheet').classList.remove('open');
+  _portfolioPending = null;
+}
+
+function confirmPortfolioSave() {
+  if (!_portfolioPending) return;
+  const title = document.getElementById('pssTitleInput').value.trim() || 'My Creation';
+  const tags = [...document.querySelectorAll('#pssTags .pss-tag.sel')].map(el => el.textContent);
+
+  const item = {
+    id:        'pf_' + Date.now(),
+    date:      new Date().toISOString(),
+    title,
+    tags,
+    kind:      _portfolioPending.kind,
+    mediaType: _portfolioPending.mediaType,
+    base64:    _portfolioPending.base64
+  };
+
+  if (!state.portfolio) state.portfolio = [];
+  state.portfolio.unshift(item);
+  save();
+
+  document.getElementById('portfolioSaveSheet').classList.remove('open');
+  _portfolioPending = null;
+  renderPortfolio();
+  refreshHome();
+}
+
+function renderPortfolio() {
+  const grid = document.getElementById('portfolioGrid');
+  if (!grid) return;
+  const items = state.portfolio || [];
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="portfolio-empty" style="grid-column:span 2">
+      <div class="portfolio-empty-icon">🎨</div>
+      <div style="font-size:14px;color:var(--text3);line-height:1.6">
+        Your artwork and creations will appear here!<br>
+        <span style="font-size:12px">Take a photo of your drawing, upload a PDF, or write a story</span>
+      </div>
+    </div>`;
+    return;
+  }
+
+  grid.innerHTML = items.map((item, i) => {
+    const isImg = item.mediaType?.startsWith('image/');
+    const tagBadge = item.tags?.[0] || item.kind || 'Art';
+    const dateStr = new Date(item.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+    const thumb = isImg
+      ? `<img class="portfolio-item-thumb" src="data:${item.mediaType};base64,${item.base64}" alt="${item.title}" loading="lazy">`
+      : `<div class="portfolio-item-thumb-placeholder">📄</div>`;
+
+    return `<div class="portfolio-item" style="animation-delay:${i*0.06}s" onclick="openPortfolioViewer('${item.id}')">
+      ${thumb}
+      <span class="portfolio-item-type badge-coral">${tagBadge}</span>
+      <div class="portfolio-item-meta">
+        <div class="portfolio-item-title">${item.title}</div>
+        <div class="portfolio-item-date">${dateStr}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPortfolioViewer(id) {
+  const item = (state.portfolio || []).find(p => p.id === id);
+  if (!item) return;
+  _portfolioViewingId = id;
+
+  const viewer = document.getElementById('portfolioViewer');
+  const img    = document.getElementById('pvImg');
+  const pdfIc  = document.getElementById('pvPdfIcon');
+
+  if (item.mediaType?.startsWith('image/')) {
+    img.src = `data:${item.mediaType};base64,${item.base64}`;
+    img.style.display = 'block';
+    pdfIc.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    pdfIc.style.display = 'block';
+  }
+
+  document.getElementById('pvTitle').textContent = item.title;
+  document.getElementById('pvDate').textContent = new Date(item.date).toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  viewer.classList.add('open');
+}
+
+function closePortfolioViewer() {
+  document.getElementById('portfolioViewer').classList.remove('open');
+  _portfolioViewingId = null;
+}
+
+function renamePortfolioItem() {
+  const item = (state.portfolio || []).find(p => p.id === _portfolioViewingId);
+  if (!item) return;
+  const newName = prompt('Rename this creation:', item.title);
+  if (newName && newName.trim()) {
+    item.title = newName.trim();
+    save();
+    document.getElementById('pvTitle').textContent = item.title;
+    renderPortfolio();
+  }
+}
+
+function deletePortfolioItem() {
+  if (!confirm('Delete this creation? This cannot be undone.')) return;
+  state.portfolio = (state.portfolio || []).filter(p => p.id !== _portfolioViewingId);
+  save();
+  closePortfolioViewer();
+  renderPortfolio();
+  refreshHome();
+}
+
 // ── Version display ───────────────────────────────────
 function showAppVersion() {
   const meta = document.getElementById('app-version');
@@ -3130,7 +3549,8 @@ function showAppVersion() {
   const v = meta.getAttribute('content') || 'unknown';
   const d = new Date(v);
   const fmt = d.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'numeric'});
-  el.textContent = 'Updated ' + fmt + ' · Voice Journal · School Files · Vocabulary · Multi-provider AI';
+  el.textContent = 'Updated ' + fmt + ' · Voice Journal · School Files · Vocabulary · Creative Portfolio · Multi-provider AI';
+  updateInstallUI();
 }
 
 showAppVersion();
